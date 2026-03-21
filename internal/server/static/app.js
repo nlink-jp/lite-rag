@@ -15,6 +15,15 @@
 
   let currentView = 'rendered';
 
+  // Prevent raw HTML blocks in LLM output from being injected into the DOM.
+  // marked v15 removed the built-in sanitize option; we override the html
+  // renderer to escape angle brackets instead of passing them through.
+  marked.use({
+    renderer: {
+      html({ text }) { return escHtml(text); },
+    },
+  });
+
   btnRendered.addEventListener('click', () => setView('rendered'));
   btnRaw.addEventListener('click',      () => setView('raw'));
 

@@ -43,6 +43,103 @@ func (db *DB) QueryRaw(query string, args ...any) (*sql.Rows, error) {
 	return db.conn.Query(query, args...)
 }
 
+// DocumentRecord holds metadata for a single indexed document.
+type DocumentRecord struct {
+	ID             string
+	FilePath       string
+	FileHash       string
+	TotalChunks    int
+	IndexedAt      string
+	EmbeddingModel string
+}
+
+// ChunkRecord holds a single chunk with its text content.
+type ChunkRecord struct {
+	ChunkIndex  int
+	HeadingPath string
+	Content     string
+}
+
+// ListDocuments returns all documents ordered by file_path.
+func (db *DB) ListDocuments() ([]DocumentRecord, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, file_path, file_hash, total_chunks,
+		       strftime(indexed_at, '%Y-%m-%d %H:%M:%S'), embedding_model
+		FROM documents
+		ORDER BY file_path
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("list documents: %w", err)
+	}
+	defer rows.Close()
+
+	var docs []DocumentRecord
+	for rows.Next() {
+		var d DocumentRecord
+		if err := rows.Scan(&d.ID, &d.FilePath, &d.FileHash,
+			&d.TotalChunks, &d.IndexedAt, &d.EmbeddingModel); err != nil {
+			return nil, fmt.Errorf("scan document: %w", err)
+		}
+		docs = append(docs, d)
+	}
+	return docs, rows.Err()
+}
+
+// DeleteDocument removes a document and all its chunks. Returns an error if the
+// document does not exist.
+func (db *DB) DeleteDocument(id string) error {
+	// Verify the document exists first.
+	var count int
+	if err := db.conn.QueryRow(`SELECT COUNT(*) FROM documents WHERE id = ?`, id).
+		Scan(&count); err != nil {
+		return fmt.Errorf("check document: %w", err)
+	}
+	if count == 0 {
+		return fmt.Errorf("document %q not found", id)
+	}
+
+	if _, err := db.conn.Exec(`DELETE FROM chunks WHERE document_id = ?`, id); err != nil {
+		return fmt.Errorf("delete chunks: %w", err)
+	}
+	if _, err := db.conn.Exec(`DELETE FROM documents WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("delete document: %w", err)
+	}
+	return nil
+}
+
+// DocumentChunks returns all chunks for a document ordered by chunk_index.
+func (db *DB) DocumentChunks(id string) ([]ChunkRecord, error) {
+	// Verify the document exists first.
+	var filePath string
+	if err := db.conn.QueryRow(`SELECT file_path FROM documents WHERE id = ?`, id).
+		Scan(&filePath); err == sql.ErrNoRows {
+		return nil, fmt.Errorf("document %q not found", id)
+	} else if err != nil {
+		return nil, fmt.Errorf("check document: %w", err)
+	}
+
+	rows, err := db.conn.Query(`
+		SELECT chunk_index, COALESCE(heading_path, ''), content
+		FROM chunks
+		WHERE document_id = ?
+		ORDER BY chunk_index
+	`, id)
+	if err != nil {
+		return nil, fmt.Errorf("query chunks: %w", err)
+	}
+	defer rows.Close()
+
+	var chunks []ChunkRecord
+	for rows.Next() {
+		var c ChunkRecord
+		if err := rows.Scan(&c.ChunkIndex, &c.HeadingPath, &c.Content); err != nil {
+			return nil, fmt.Errorf("scan chunk: %w", err)
+		}
+		chunks = append(chunks, c)
+	}
+	return chunks, rows.Err()
+}
+
 // migrate creates all required tables if they do not already exist and applies
 // incremental schema changes for pre-existing databases.
 func (db *DB) migrate() error {

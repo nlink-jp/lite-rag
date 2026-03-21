@@ -38,21 +38,36 @@ lite-rag --config /path/to/config.toml index --dir ./docs
 
 ```sh
 lite-rag ask "<質問>"
+lite-rag ask --json "<質問>"
 ```
 
-インデックス済みドキュメントをもとに質問に回答します。回答はストリーミングで標準出力へ出力されます。
+インデックス済みドキュメントをもとに質問に回答します。
+
+- デフォルト: 回答をストリーミングで標準出力へ出力し、末尾にソース一覧を表示します。
+- `--json`: 回答とソースを1つの JSON オブジェクトとして出力します。進捗メッセージは抑制されます。
 
 **使用例:**
 
 ```sh
-# 日本語で質問
+# テキスト出力
 lite-rag ask "lite-rag のチャンク分割アルゴリズムを教えてください"
 
-# 英語でも可
-lite-rag ask "What embedding model does lite-rag use?"
+# JSON 出力（外部連携・スクリプト向け）
+lite-rag ask --json "What embedding model does lite-rag use?"
 ```
 
-インデックスが空の場合は「No relevant documents found.」と表示して終了します。
+JSON 出力の形式:
+
+```json
+{
+  "answer": "...",
+  "sources": [
+    {"file_path": "...", "heading_path": "...", "score": 0.872}
+  ]
+}
+```
+
+インデックスが空の場合は `{"answer":"","sources":[]}` を出力して終了します（`--json` 時）。
 
 ### serve — HTTP API サーバーと Web UI を起動
 

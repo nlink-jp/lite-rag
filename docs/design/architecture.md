@@ -292,6 +292,7 @@ Commands:
   index   --dir <directory>   Index all *.md files under a directory
           --file <file>        Index a single file (any extension)
   ask     <question>    Answer a question using the indexed documents
+          --json         Output answer and sources as a JSON object
   serve                 Start the HTTP API server with embedded Web UI
   docs                  Manage indexed documents (list / show / delete)
   version               Print version information

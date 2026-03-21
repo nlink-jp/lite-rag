@@ -139,12 +139,25 @@ lite-rag [--config <path>] <command>
 ```sh
 ./bin/lite-rag ask "デフォルトのチャンクサイズは？"
 ./bin/lite-rag --config /etc/lite-rag.toml ask "インストール手順は？"
+
+# JSON 出力（回答とソースを1つの JSON オブジェクトで出力）
+./bin/lite-rag ask --json "デフォルトのチャンクサイズは？"
 ```
 
 - 質問を埋め込み、DuckDB で上位 K 件の類似チャンクを検索します
 - 各ヒットを ±`context_window` チャンク分拡張します
 - LLM の回答を stdout にストリーミング出力します
 - `query_rewrite = true` で LLM によるクエリリライトが有効になります（88% のクエリでスコア向上、約 2 秒のオーバーヘッド）
+- `--json`: 回答をバッファリングして1つの JSON オブジェクトとして出力します。進捗メッセージは抑制され、stdout は純粋な JSON になります。
+
+```json
+{
+  "answer": "デフォルトのチャンクサイズは 512 トークンです。",
+  "sources": [
+    {"file_path": "docs/README.md", "heading_path": "Configuration", "score": 0.872}
+  ]
+}
+```
 
 ### serve
 

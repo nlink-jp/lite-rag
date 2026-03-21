@@ -147,6 +147,9 @@ Commands:
 ```sh
 ./bin/lite-rag ask "What is the default chunk size?"
 ./bin/lite-rag --config /etc/lite-rag.toml ask "Installation steps?"
+
+# JSON output (answer + sources as a single JSON object)
+./bin/lite-rag ask --json "What is the default chunk size?"
 ```
 
 - Embeds the question, searches DuckDB for the top-K similar chunks.
@@ -154,6 +157,17 @@ Commands:
 - Streams the LLM answer to stdout.
 - Set `query_rewrite = true` in config to enable LLM-assisted rewriting
   (improves score in ~88% of queries; adds ~2 s latency per query).
+- `--json`: buffers the full answer and outputs a single JSON object.
+  Progress messages are suppressed; stdout contains only valid JSON.
+
+```json
+{
+  "answer": "The default chunk size is 512 tokens.",
+  "sources": [
+    {"file_path": "docs/README.md", "heading_path": "Configuration", "score": 0.872}
+  ]
+}
+```
 
 ### serve
 

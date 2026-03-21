@@ -21,10 +21,12 @@ type Embedder interface {
 	Embed(ctx context.Context, texts []string) ([][]float32, error)
 }
 
-// QueryRewriter rewrites a query into a form more likely to match document text.
-// If the implementation returns an error, the original query is used as fallback.
+// QueryRewriter rewrites a query into one or more forms more likely to match
+// document text. Returning multiple variants (e.g. Japanese and English) causes
+// the Retriever to run a parallel search per variant and merge the results.
+// If the implementation returns an error, only the original query is searched.
 type QueryRewriter interface {
-	RewriteQuery(ctx context.Context, query string) (string, error)
+	RewriteQuery(ctx context.Context, query string) ([]string, error)
 }
 
 // DBReader is the subset of database.DB used by the Retriever.
@@ -87,17 +89,16 @@ func (r *Retriever) Retrieve(ctx context.Context, query string) ([]Passage, erro
 	return r.expand(hits)
 }
 
-// search runs one or two concurrent vector searches and merges the results.
+// search runs concurrent vector searches for the original query and any rewritten
+// variants, then merges the results (max score per chunk ID).
 func (r *Retriever) search(ctx context.Context, query string) ([]database.ScoredChunk, error) {
 	type searchResult struct {
 		hits []database.ScoredChunk
 		err  error
 	}
 
+	// Goroutine 1: embed the original query and search immediately.
 	origCh := make(chan searchResult, 1)
-	rewriteCh := make(chan searchResult, 1)
-
-	// Goroutine 1: embed the original query and search.
 	go func() {
 		vecs, err := r.emb.Embed(ctx, []string{"search_query: " + normalizer.StripMarkdown(query)})
 		if err != nil {
@@ -112,29 +113,49 @@ func (r *Retriever) search(ctx context.Context, query string) ([]database.Scored
 		origCh <- searchResult{hits: hits}
 	}()
 
-	// Goroutine 2: rewrite the query, embed the result, and search (optional).
+	// Goroutine 2: rewrite the query into variants (e.g. JA + EN), then search
+	// each variant in parallel and send the merged result (optional).
+	rewriteCh := make(chan searchResult, 1)
 	if r.rewriter != nil {
 		go func() {
-			rewritten, err := r.rewriter.RewriteQuery(ctx, query)
+			variants, err := r.rewriter.RewriteQuery(ctx, query)
 			if err != nil {
 				slog.Warn("query rewrite failed, skipping", "error", err)
 				rewriteCh <- searchResult{}
 				return
 			}
-			slog.Debug("query rewritten", "original", query, "rewritten", rewritten)
-			vecs, err := r.emb.Embed(ctx, []string{"search_query: " + normalizer.StripMarkdown(rewritten)})
-			if err != nil {
-				slog.Warn("embed rewritten query failed, skipping", "error", err)
-				rewriteCh <- searchResult{}
-				return
+			for i, v := range variants {
+				slog.Debug("query rewritten", "original", query, "variant", i, "rewritten", v)
 			}
-			hits, err := r.db.SimilarChunks(vecs[0], r.topK, r.embeddingModel)
-			if err != nil {
-				slog.Warn("similar chunks (rewritten) failed, skipping", "error", err)
-				rewriteCh <- searchResult{}
-				return
+
+			// Search all variants in parallel.
+			type varResult struct{ hits []database.ScoredChunk }
+			varChs := make([]chan varResult, len(variants))
+			for i, v := range variants {
+				ch := make(chan varResult, 1)
+				varChs[i] = ch
+				go func(v string, ch chan varResult) {
+					vecs, err := r.emb.Embed(ctx, []string{"search_query: " + normalizer.StripMarkdown(v)})
+					if err != nil {
+						slog.Warn("embed rewritten query failed, skipping", "variant", v, "error", err)
+						ch <- varResult{}
+						return
+					}
+					hits, err := r.db.SimilarChunks(vecs[0], r.topK, r.embeddingModel)
+					if err != nil {
+						slog.Warn("similar chunks (rewritten) failed, skipping", "variant", v, "error", err)
+						ch <- varResult{}
+						return
+					}
+					ch <- varResult{hits: hits}
+				}(v, ch)
 			}
-			rewriteCh <- searchResult{hits: hits}
+
+			var merged []database.ScoredChunk
+			for _, ch := range varChs {
+				merged = mergeHits(merged, (<-ch).hits)
+			}
+			rewriteCh <- searchResult{hits: merged}
 		}()
 	} else {
 		rewriteCh <- searchResult{} // disabled — send empty immediately

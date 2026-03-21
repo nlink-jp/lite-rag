@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -31,12 +32,12 @@ func (m *mockEmbedder) Embed(_ context.Context, texts []string) ([][]float32, er
 }
 
 type mockRewriter struct {
-	result string
-	err    error
+	results []string
+	err     error
 }
 
-func (m *mockRewriter) RewriteQuery(_ context.Context, _ string) (string, error) {
-	return m.result, m.err
+func (m *mockRewriter) RewriteQuery(_ context.Context, _ string) ([]string, error) {
+	return m.results, m.err
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -248,16 +249,20 @@ func TestRetrieve_QueryRewriteAddsExtraHits(t *testing.T) {
 
 	// Embedder alternates: first call (original query) → matches d1,
 	// second call (rewritten query) → matches d2.
+	var mu sync.Mutex
 	callCount := 0
 	emb := &funcEmbedder{fn: func(_ context.Context, _ []string) ([][]float32, error) {
+		mu.Lock()
+		n := callCount
 		callCount++
-		if callCount == 1 {
+		mu.Unlock()
+		if n == 0 {
 			return [][]float32{{1, 0}}, nil // original: matches c0
 		}
 		return [][]float32{{0, 1}}, nil // rewritten: matches c1
 	}}
 
-	rw := &mockRewriter{result: "rewritten query text"}
+	rw := &mockRewriter{results: []string{"rewritten query text"}}
 	ret := retriever.New(db, emb, rw, "test-model", cfg(1, 0))
 
 	passages, err := ret.Retrieve(context.Background(), "q")
@@ -267,6 +272,50 @@ func TestRetrieve_QueryRewriteAddsExtraHits(t *testing.T) {
 	// Both documents should be represented after merging.
 	if len(passages) != 2 {
 		t.Fatalf("expected 2 passages (one from each search), got %d", len(passages))
+	}
+}
+
+func TestRetrieve_QueryRewriteMultipleVariants(t *testing.T) {
+	db := openDB(t)
+	insertDoc(t, db, "d1", "/doc1.md", []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "original hit", Embedding: []float32{1, 0, 0}},
+	})
+	insertDoc(t, db, "d2", "/doc2.md", []database.ChunkRow{
+		{ID: "c1", DocumentID: "d2", ChunkIndex: 0, Content: "japanese hit", Embedding: []float32{0, 1, 0}},
+	})
+	insertDoc(t, db, "d3", "/doc3.md", []database.ChunkRow{
+		{ID: "c2", DocumentID: "d3", ChunkIndex: 0, Content: "english hit", Embedding: []float32{0, 0, 1}},
+	})
+
+	// Embedder maps call index → distinct vector per query type.
+	var mu sync.Mutex
+	callCount := 0
+	emb := &funcEmbedder{fn: func(_ context.Context, _ []string) ([][]float32, error) {
+		mu.Lock()
+		n := callCount
+		callCount++
+		mu.Unlock()
+		switch n {
+		case 0:
+			return [][]float32{{1, 0, 0}}, nil // original → d1
+		case 1:
+			return [][]float32{{0, 1, 0}}, nil // JA variant → d2
+		default:
+			return [][]float32{{0, 0, 1}}, nil // EN variant → d3
+		}
+	}}
+
+	// Two variants: JA and EN.
+	rw := &mockRewriter{results: []string{"日本語リライト", "English rewrite"}}
+	ret := retriever.New(db, emb, rw, "test-model", cfg(3, 0))
+
+	passages, err := ret.Retrieve(context.Background(), "q")
+	if err != nil {
+		t.Fatalf("Retrieve: %v", err)
+	}
+	// All three documents should appear after merging original + JA + EN searches.
+	if len(passages) != 3 {
+		t.Fatalf("expected 3 passages (original + JA variant + EN variant), got %d", len(passages))
 	}
 }
 

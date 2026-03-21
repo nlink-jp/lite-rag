@@ -85,11 +85,13 @@ Responsibilities:
 
 Responsibilities:
 1. Accept a natural-language query string.
-2. Call the embedding API to get the query vector.
-3. Execute a cosine-similarity search against all stored chunk vectors in DuckDB.
-4. For each hit, expand the result window by fetching adjacent chunks from the same
+2. Optionally rewrite the query into multilingual variants via the LLM (see §3.3.2).
+3. Call the embedding API to get the query vector(s).
+4. Execute cosine-similarity searches against all stored chunk vectors in DuckDB.
+5. Merge results from all searches (max score per chunk ID).
+6. For each hit, expand the result window by fetching adjacent chunks from the same
    document (see §3.3.1).
-5. Return the enriched chunks as the context for LLM prompt construction.
+7. Return the enriched chunks as the context for LLM prompt construction.
 
 Vector similarity search is implemented as a DuckDB SQL query using the built-in
 `list_cosine_similarity` function, which operates on `FLOAT[]` columns natively.
@@ -136,6 +138,44 @@ context_window = 1   # chunks to expand before and after each hit (0 = no expans
 Setting `context_window = 0` disables expansion and returns bare hit chunks,
 which is useful for benchmarking retrieval quality in isolation.
 
+#### 3.3.2 Multilingual Query Rewriting
+
+When `query_rewrite = true`, the Retriever performs a **multilingual hybrid search**:
+
+1. A single LLM call (via `llm.Client.RewriteQuery`) rewrites the query into two
+   declarative retrieval statements — one in Japanese (`JA:`) and one in English (`EN:`).
+2. Three concurrent vector searches run in parallel:
+   - Original query (as supplied by the user)
+   - JA variant
+   - EN variant
+3. Results from all three searches are merged (max score per chunk ID) before
+   context expansion.
+
+This ensures that multilingual document collections are searched effectively
+regardless of the query's original language.
+
+```
+query "how does chunking work?"
+       │
+       ├── original embedding ──────────────────→ SimilarChunks → hits_orig
+       │
+       └── RewriteQuery ──→ JA: チャンク分割の仕組み  → embed → SimilarChunks → hits_ja
+                         └→ EN: chunk splitting algorithm → embed → SimilarChunks → hits_en
+                                                             ↓
+                                             mergeHits(orig, ja, en)
+                                                             ↓
+                                             context expansion → passages
+```
+
+If the rewrite LLM call fails, only the original query is searched (non-fatal fallback).
+
+**Configuration:**
+
+```toml
+[retrieval]
+query_rewrite = true   # default: false
+```
+
 ### 3.4 LLM Client (`internal/llm/`)
 
 - A thin HTTP client wrapping the OpenAI-compatible Chat Completions endpoint.
@@ -143,6 +183,9 @@ which is useful for benchmarking retrieval quality in isolation.
 - Supports **streaming** responses via Server-Sent Events (SSE); the client writes
   tokens to `io.Writer` as they arrive.
 - Separate `Embed()` method for the Embeddings endpoint (non-streaming).
+- `RewriteQuery()` sends the query to the chat model with a prompt requesting
+  `JA: ...` / `EN: ...` two-line output, and returns both variants as `[]string`.
+  Falls back to a single-element slice when the model output does not follow the format.
 
 ### 3.5 Chunker (`pkg/chunker/`)
 

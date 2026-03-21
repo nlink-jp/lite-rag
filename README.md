@@ -155,8 +155,10 @@ Commands:
 - Embeds the question, searches DuckDB for the top-K similar chunks.
 - Expands each hit by ±`context_window` adjacent chunks.
 - Streams the LLM answer to stdout.
-- Set `query_rewrite = true` in config to enable LLM-assisted rewriting
-  (improves score in ~88% of queries; adds ~2 s latency per query).
+- Set `query_rewrite = true` to enable **multilingual query rewriting**: the LLM
+  rewrites the query into both Japanese and English declarative statements, and three
+  parallel vector searches (original + JA + EN) are merged, improving recall across
+  multilingual document collections (improves score in ~88% of queries; adds ~2 s latency).
 - `--json`: buffers the full answer and outputs a single JSON object.
   Progress messages are suppressed; stdout contains only valid JSON.
 

@@ -7,6 +7,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Multilingual query rewriting** — when `query_rewrite = true`, the LLM rewrites the
+  query into both Japanese (`JA:`) and English (`EN:`) declarative statements in a single
+  API call. Three vector searches run concurrently (original + JA + EN) and their results
+  are merged (max score per chunk ID) before context expansion. This improves recall across
+  multilingual document collections regardless of the query's input language.
+
+---
+
 ## [0.2.0] — 2026-03-21
 
 ### Breaking Changes

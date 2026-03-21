@@ -252,10 +252,10 @@ data: [DONE]
 
 // ── RewriteQuery ────────────────────────────────────────────────────────────
 
-func TestRewriteQuery_ReturnsRewrittenText(t *testing.T) {
-	sse := `data: {"choices":[{"delta":{"content":"rewritten query"},"finish_reason":null}]}
-data: [DONE]
-`
+func TestRewriteQuery_ReturnsJAAndENVariants(t *testing.T) {
+	// Server returns the expected two-line JA/EN format (newline must be JSON-escaped).
+	// Two SSE chunks: line 1 (JA), then line 2 (EN).
+	sse := "data: {\"choices\":[{\"delta\":{\"content\":\"JA: \\u65e5\\u672c\\u8a9e\\u306e\\u30af\\u30a8\\u30ea\\nEN: English query\"},\"finish_reason\":null}]}\ndata: [DONE]\n"
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/chat/completions" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
@@ -266,12 +266,39 @@ data: [DONE]
 	defer srv.Close()
 
 	c := llm.New(srv.URL, "", "e", "chat-model")
-	got, err := c.RewriteQuery(context.Background(), "original question?")
+	variants, err := c.RewriteQuery(context.Background(), "original question?")
 	if err != nil {
 		t.Fatalf("RewriteQuery: %v", err)
 	}
-	if got != "rewritten query" {
-		t.Errorf("got %q, want %q", got, "rewritten query")
+	if len(variants) != 2 {
+		t.Fatalf("expected 2 variants (JA+EN), got %d: %v", len(variants), variants)
+	}
+	if variants[0] != "日本語のクエリ" {
+		t.Errorf("JA variant = %q, want %q", variants[0], "日本語のクエリ")
+	}
+	if variants[1] != "English query" {
+		t.Errorf("EN variant = %q, want %q", variants[1], "English query")
+	}
+}
+
+func TestRewriteQuery_FallsBackToSingleVariant(t *testing.T) {
+	// Server returns a single-language string (no JA:/EN: format) — fallback path.
+	sse := `data: {"choices":[{"delta":{"content":"rewritten query"},"finish_reason":null}]}` + "\ndata: [DONE]\n"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(sse)) //nolint:errcheck
+	}))
+	defer srv.Close()
+
+	c := llm.New(srv.URL, "", "e", "chat-model")
+	variants, err := c.RewriteQuery(context.Background(), "original question?")
+	if err != nil {
+		t.Fatalf("RewriteQuery: %v", err)
+	}
+	if len(variants) != 1 {
+		t.Fatalf("expected 1 fallback variant, got %d: %v", len(variants), variants)
+	}
+	if variants[0] != "rewritten query" {
+		t.Errorf("variant = %q, want %q", variants[0], "rewritten query")
 	}
 }
 

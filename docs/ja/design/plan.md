@@ -93,8 +93,8 @@
 - [x] darwin ターゲット: `clang -arch` による Makefile `cross-build-darwin` ターゲット
 - [x] linux ターゲット: Podman/Docker コンテナ内の `gcc-x86-64-linux-gnu` / `gcc-aarch64-linux-gnu` による `cross-build-linux` ターゲット
 - [x] `make dist` でリリースアーカイブ（tar.gz）を生成
-- [ ] `CHANGELOG.md` の v0.1.0 エントリ *(最終リリース手順にて)*
-- [ ] Git タグ `v0.1.0`
+- [x] `CHANGELOG.md` にリリースエントリを記載
+- [x] Git タグ `v0.1.0`、`v0.1.1`；GitHub リリース公開済み
 
 ---
 
@@ -124,7 +124,20 @@
 
 ---
 
-## スコープ外 (v0.1.0)
+### Phase 9: ドキュメント管理（`docs` サブコマンド）  *(完了)*
+
+目標: DB への直接アクセスなしでインデックス済みドキュメントを参照・管理できる。
+
+- [x] `db.ListDocuments()` — ファイルパス順に全ドキュメントレコードを返す
+- [x] `db.DeleteDocument(id)` — ドキュメントと全チャンクを削除；存在しない場合はエラー
+- [x] `db.DocumentChunks(id)` — コンテンツ再構築のためチャンクをインデックス順に返す
+- [x] `cmd/lite-rag/docs.go` — `docs list [--json]`、`docs show <id>`、`docs delete <id>`
+- [x] 3つの DB メソッドに対するユニットテスト（9 テストケース）
+- [x] ドキュメント更新（README、architecture.md、structure.md、usage.md）
+
+---
+
+## スコープ外 (v0.1.x)
 
 - Windows サポート（`go-duckdb` の CGo 制約によりドロップ）
 - マルチユーザーまたは並行インデックス

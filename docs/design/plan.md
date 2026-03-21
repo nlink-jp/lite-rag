@@ -97,8 +97,8 @@ Goal: Binaries for all four target platforms.
       (`podman`/`docker`) with `gcc-x86-64-linux-gnu` / `gcc-aarch64-linux-gnu`
 - [x] `make dist` packages release archives (`tar.gz`) per platform
 - [x] Verify binaries build on each platform (linux via container)
-- [x] `CHANGELOG.md` with v0.1.0 entry *(pending — see final release step)*
-- [ ] Git tag `v0.1.0`
+- [x] `CHANGELOG.md` with release entries
+- [x] Git tag `v0.1.0`, `v0.1.1`; GitHub releases published
 
 ---
 
@@ -128,7 +128,20 @@ Goal: All documentation requirements from RULES.md satisfied.
 
 ---
 
-## Out of Scope (v0.1.0)
+### Phase 9: Document Management (`docs` subcommand)  *(complete)*
+
+Goal: Inspect and manage indexed documents without direct DB access.
+
+- [x] `db.ListDocuments()` — returns all document records ordered by file path
+- [x] `db.DeleteDocument(id)` — removes document and all its chunks; errors if not found
+- [x] `db.DocumentChunks(id)` — returns chunks ordered by index for content reconstruction
+- [x] `cmd/lite-rag/docs.go` — `docs list [--json]`, `docs show <id>`, `docs delete <id>`
+- [x] Unit tests for all three DB methods (9 test cases)
+- [x] Documentation updated (README, architecture.md, structure.md, usage.md)
+
+---
+
+## Out of Scope (v0.1.x)
 
 - Windows support (dropped due to CGo constraints from `go-duckdb`)
 - Multi-user or concurrent indexing

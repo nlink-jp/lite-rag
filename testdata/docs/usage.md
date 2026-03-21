@@ -89,6 +89,22 @@ lite-rag serve --addr 127.0.0.1:9090
 | `warn` | 警告とエラーのみ |
 | `error` | エラーのみ |
 
+### docs — インデックス済みドキュメントの管理
+
+```sh
+lite-rag docs list [--json]
+lite-rag docs show <document-id>
+lite-rag docs delete <document-id>
+```
+
+インデックスデータベースに保存されているドキュメントを管理します。
+
+- `list` — インデックス済みドキュメントの一覧をテキストまたは JSON (`--json`) で表示します
+- `show` — ドキュメント ID を指定して、データベース内に保存されているコンテンツを表示します
+- `delete` — ドキュメントとその全チャンクをデータベースから削除します
+
+`<document-id>` は `docs list` で表示される 64 文字の SHA-256 ハッシュです。
+
 ### version — バージョン表示
 
 ```sh

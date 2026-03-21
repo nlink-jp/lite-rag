@@ -8,6 +8,7 @@ lite-rag/
 │   │   ├── index.go         # `index <dir>` サブコマンド
 │   │   ├── ask.go           # `ask <question>` サブコマンド
 │   │   ├── serve.go         # `serve` サブコマンド — HTTP API + Web UI 起動
+│   │   ├── docs.go          # `docs` サブコマンド — list / show / delete
 │   │   └── version.go       # `version` サブコマンド
 │   └── eval/
 │       └── main.go          # 検索品質評価ハーネス（クエリリライトベンチマーク）

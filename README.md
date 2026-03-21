@@ -118,6 +118,7 @@ Commands:
   index   <directory>   Index all Markdown files under <directory>
   ask     <question>    Answer a question using the indexed documents
   serve                 Start the HTTP API server with embedded Web UI
+  docs                  Manage indexed documents
   version               Print version information
 ```
 
@@ -158,6 +159,26 @@ Starts a local HTTP server. Open `http://127.0.0.1:8080` in a browser.
 | `/api/ask` | POST | SSE-streamed answer (`{"query":"..."}`) |
 | `/api/status` | GET | Health check and version |
 | `/` | GET | Embedded Web UI |
+
+### docs
+
+Manage documents stored in the index database.
+
+```sh
+# List all indexed documents (text table)
+./bin/lite-rag docs list
+
+# List as JSON (machine-readable)
+./bin/lite-rag docs list --json
+
+# Show reconstructed content of a document by ID
+./bin/lite-rag docs show <document-id>
+
+# Delete a document and all its chunks
+./bin/lite-rag docs delete <document-id>
+```
+
+`<document-id>` is the 64-character SHA-256 hex shown in `docs list`.
 
 ---
 

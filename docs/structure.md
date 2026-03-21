@@ -8,6 +8,7 @@ lite-rag/
 │   │   ├── index.go         # `index <dir>` subcommand
 │   │   ├── ask.go           # `ask <question>` subcommand
 │   │   ├── serve.go         # `serve` subcommand — starts HTTP API + Web UI
+│   │   ├── docs.go          # `docs` subcommand — list / show / delete
 │   │   └── version.go       # `version` subcommand
 │   └── eval/
 │       └── main.go          # Retrieval quality evaluation harness (query-rewrite benchmark)

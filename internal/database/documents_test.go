@@ -245,6 +245,230 @@ func TestSimilarChunks_FiltersOtherModel(t *testing.T) {
 	}
 }
 
+// ── ListDocuments ──────────────────────────────────────────────────────────
+
+func TestListDocuments_Empty(t *testing.T) {
+	db := newTestDB(t)
+	docs, err := db.ListDocuments()
+	if err != nil {
+		t.Fatalf("ListDocuments: %v", err)
+	}
+	if len(docs) != 0 {
+		t.Errorf("expected 0 documents, got %d", len(docs))
+	}
+}
+
+func TestListDocuments_OrderedByFilePath(t *testing.T) {
+	db := newTestDB(t)
+
+	for _, fp := range []string{"/c.md", "/a.md", "/b.md"} {
+		doc := database.DocumentRow{
+			ID: fp, FilePath: fp, FileHash: "h",
+			TotalChunks: 1, IndexedAt: time.Now().UTC(),
+			EmbeddingModel: "model-x",
+		}
+		if err := db.ReplaceDocument(doc, nil); err != nil {
+			t.Fatalf("ReplaceDocument: %v", err)
+		}
+	}
+
+	docs, err := db.ListDocuments()
+	if err != nil {
+		t.Fatalf("ListDocuments: %v", err)
+	}
+	if len(docs) != 3 {
+		t.Fatalf("expected 3 documents, got %d", len(docs))
+	}
+	want := []string{"/a.md", "/b.md", "/c.md"}
+	for i, d := range docs {
+		if d.FilePath != want[i] {
+			t.Errorf("docs[%d].FilePath = %q, want %q", i, d.FilePath, want[i])
+		}
+	}
+}
+
+func TestListDocuments_FieldsPopulated(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "doc-id", FilePath: "/x.md", FileHash: "abc123",
+		TotalChunks: 3, IndexedAt: time.Now().UTC(),
+		EmbeddingModel: "nomic-v1",
+	}
+	if err := db.ReplaceDocument(doc, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	docs, err := db.ListDocuments()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs) != 1 {
+		t.Fatalf("expected 1 document, got %d", len(docs))
+	}
+	d := docs[0]
+	if d.ID != "doc-id" {
+		t.Errorf("ID = %q, want %q", d.ID, "doc-id")
+	}
+	if d.FilePath != "/x.md" {
+		t.Errorf("FilePath = %q, want %q", d.FilePath, "/x.md")
+	}
+	if d.FileHash != "abc123" {
+		t.Errorf("FileHash = %q, want %q", d.FileHash, "abc123")
+	}
+	if d.TotalChunks != 3 {
+		t.Errorf("TotalChunks = %d, want 3", d.TotalChunks)
+	}
+	if d.EmbeddingModel != "nomic-v1" {
+		t.Errorf("EmbeddingModel = %q, want %q", d.EmbeddingModel, "nomic-v1")
+	}
+	if d.IndexedAt == "" {
+		t.Error("IndexedAt is empty")
+	}
+}
+
+// ── DeleteDocument ─────────────────────────────────────────────────────────
+
+func TestDeleteDocument_RemovesDocumentAndChunks(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 2, IndexedAt: time.Now().UTC(),
+	}
+	chunks := []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "alpha", Embedding: []float32{1, 0}},
+		{ID: "c1", DocumentID: "d1", ChunkIndex: 1, Content: "beta", Embedding: []float32{0, 1}},
+	}
+	if err := db.ReplaceDocument(doc, chunks); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.DeleteDocument("d1"); err != nil {
+		t.Fatalf("DeleteDocument: %v", err)
+	}
+
+	// document must be gone
+	docs, err := db.ListDocuments()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs) != 0 {
+		t.Errorf("expected 0 documents after delete, got %d", len(docs))
+	}
+
+	// chunks must be gone (SimilarChunks returns nothing)
+	hits, err := db.SimilarChunks([]float32{1, 0}, 10, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hits) != 0 {
+		t.Errorf("expected 0 chunks after delete, got %d", len(hits))
+	}
+}
+
+func TestDeleteDocument_NotFound(t *testing.T) {
+	db := newTestDB(t)
+	if err := db.DeleteDocument("nonexistent-id"); err == nil {
+		t.Error("expected error for nonexistent document, got nil")
+	}
+}
+
+func TestDeleteDocument_OnlyDeletesTargetDocument(t *testing.T) {
+	db := newTestDB(t)
+
+	for _, id := range []string{"d1", "d2"} {
+		doc := database.DocumentRow{
+			ID: id, FilePath: "/" + id + ".md", FileHash: "h",
+			TotalChunks: 1, IndexedAt: time.Now().UTC(),
+		}
+		if err := db.ReplaceDocument(doc, []database.ChunkRow{
+			{ID: id + "_c0", DocumentID: id, ChunkIndex: 0, Content: id, Embedding: []float32{1}},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := db.DeleteDocument("d1"); err != nil {
+		t.Fatal(err)
+	}
+
+	docs, err := db.ListDocuments()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs) != 1 || docs[0].ID != "d2" {
+		t.Errorf("expected only d2 to remain, got %v", docs)
+	}
+}
+
+// ── DocumentChunks ─────────────────────────────────────────────────────────
+
+func TestDocumentChunks_OrderedByIndex(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 3, IndexedAt: time.Now().UTC(),
+	}
+	// Insert in reverse order to verify ORDER BY chunk_index.
+	chunks := []database.ChunkRow{
+		{ID: "c2", DocumentID: "d1", ChunkIndex: 2, Content: "third"},
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "first"},
+		{ID: "c1", DocumentID: "d1", ChunkIndex: 1, Content: "second"},
+	}
+	if err := db.ReplaceDocument(doc, chunks); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := db.DocumentChunks("d1")
+	if err != nil {
+		t.Fatalf("DocumentChunks: %v", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("expected 3 chunks, got %d", len(got))
+	}
+	want := []string{"first", "second", "third"}
+	for i, c := range got {
+		if c.Content != want[i] {
+			t.Errorf("chunks[%d].Content = %q, want %q", i, c.Content, want[i])
+		}
+		if c.ChunkIndex != i {
+			t.Errorf("chunks[%d].ChunkIndex = %d, want %d", i, c.ChunkIndex, i)
+		}
+	}
+}
+
+func TestDocumentChunks_HeadingPath(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 2, IndexedAt: time.Now().UTC(),
+	}
+	chunks := []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, HeadingPath: "# Intro", Content: "intro text"},
+		{ID: "c1", DocumentID: "d1", ChunkIndex: 1, HeadingPath: "", Content: "no heading"},
+	}
+	if err := db.ReplaceDocument(doc, chunks); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := db.DocumentChunks("d1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got[0].HeadingPath != "# Intro" {
+		t.Errorf("HeadingPath = %q, want %q", got[0].HeadingPath, "# Intro")
+	}
+	if got[1].HeadingPath != "" {
+		t.Errorf("HeadingPath = %q, want empty", got[1].HeadingPath)
+	}
+}
+
+func TestDocumentChunks_NotFound(t *testing.T) {
+	db := newTestDB(t)
+	if _, err := db.DocumentChunks("nonexistent-id"); err == nil {
+		t.Error("expected error for nonexistent document, got nil")
+	}
+}
+
 // ── AdjacentChunks ─────────────────────────────────────────────────────────
 
 func TestAdjacentChunks(t *testing.T) {

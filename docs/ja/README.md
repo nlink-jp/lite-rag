@@ -110,6 +110,7 @@ lite-rag [--config <path>] <command>
   index   <directory>   指定ディレクトリ以下の Markdown ファイルをインデックス
   ask     <question>    インデックス済みドキュメントを使って質問に回答
   serve                 HTTP API サーバーと組み込み Web UI を起動
+  docs                  インデックス済みドキュメントを管理
   version               バージョン情報を表示
 ```
 
@@ -149,6 +150,26 @@ lite-rag [--config <path>] <command>
 | `/api/ask` | POST | SSE ストリーミングで回答を返す（`{"query":"..."}`）|
 | `/api/status` | GET | ヘルスチェックとバージョン確認 |
 | `/` | GET | 組み込み Web UI |
+
+### docs
+
+インデックスデータベースに保存されているドキュメントを管理します。
+
+```sh
+# インデックス済みドキュメントをテキスト一覧で表示
+./bin/lite-rag docs list
+
+# JSON 形式で出力（機械処理向け）
+./bin/lite-rag docs list --json
+
+# ドキュメント ID を指定してコンテンツを表示
+./bin/lite-rag docs show <document-id>
+
+# ドキュメントとその全チャンクを削除
+./bin/lite-rag docs delete <document-id>
+```
+
+`<document-id>` は `docs list` で表示される 64 文字の SHA-256 ハッシュです。
 
 ---
 

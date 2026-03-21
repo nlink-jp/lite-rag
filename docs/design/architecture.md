@@ -292,6 +292,7 @@ Commands:
   index   <directory>   Index all Markdown files under <directory>
   ask     <question>    Answer a question using the indexed documents
   serve                 Start the HTTP API server with embedded Web UI
+  docs                  Manage indexed documents (list / show / delete)
   version               Print version information
 ```
 

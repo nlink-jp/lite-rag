@@ -77,6 +77,7 @@ func run(args ...string) error {
 	// Reset package-level flag vars; cobra does not reset them between Execute calls.
 	indexDir = ""
 	indexFile = ""
+	dbOverride = ""
 
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
@@ -226,5 +227,73 @@ func TestAskCmd_DBError(t *testing.T) {
 
 	if err := run("--config", cfg, "ask", "question"); err == nil {
 		t.Error("expected error when DB path is a directory, got nil")
+	}
+}
+
+// ── --db global flag ─────────────────────────────────────────────────────────
+
+// TestDBFlag_OverridesConfigPath verifies that --db takes precedence over the
+// database.path in the config file.
+func TestDBFlag_OverridesConfigPath(t *testing.T) {
+	srv := mockLLM(t)
+	dir := t.TempDir()
+
+	configDB := filepath.Join(dir, "config.db")
+	flagDB := filepath.Join(dir, "flag.db")
+
+	// Config points to configDB.
+	cfg := writeCfg(t, dir, srv.URL, configDB)
+
+	docDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(docDir, "doc.md"), []byte("# Topic\n\nContent."), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Index into flagDB via --db (configDB should remain untouched).
+	if err := run("--config", cfg, "--db", flagDB, "index", "--dir", docDir); err != nil {
+		t.Fatalf("index with --db failed: %v", err)
+	}
+
+	// flagDB must exist; configDB must not.
+	if _, err := os.Stat(flagDB); err != nil {
+		t.Errorf("--db target %s not created: %v", flagDB, err)
+	}
+	if _, err := os.Stat(configDB); err == nil {
+		t.Errorf("config db %s should not have been created", configDB)
+	}
+}
+
+// TestDBFlag_IndexAndAsk verifies end-to-end: index into a --db path, then ask
+// against the same --db path (config db is different and empty throughout).
+func TestDBFlag_IndexAndAsk(t *testing.T) {
+	srv := mockLLM(t)
+	dir := t.TempDir()
+
+	configDB := filepath.Join(dir, "config.db")
+	flagDB := filepath.Join(dir, "flag.db")
+	cfg := writeCfg(t, dir, srv.URL, configDB)
+
+	docDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(docDir, "doc.md"), []byte("# Topic\n\nContent."), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := run("--config", cfg, "--db", flagDB, "index", "--dir", docDir); err != nil {
+		t.Fatalf("index with --db failed: %v", err)
+	}
+
+	if err := run("--config", cfg, "--db", flagDB, "ask", "what is the topic?"); err != nil {
+		t.Errorf("ask with --db failed: %v", err)
+	}
+}
+
+// TestDBFlag_InvalidPath verifies that an unwritable --db path produces an error.
+func TestDBFlag_InvalidPath(t *testing.T) {
+	srv := mockLLM(t)
+	dir := t.TempDir()
+	cfg := writeCfg(t, dir, srv.URL, filepath.Join(dir, "config.db"))
+
+	// Passing a directory as --db should fail when DuckDB tries to open it.
+	if err := run("--config", cfg, "--db", dir, "ask", "question"); err == nil {
+		t.Error("expected error for --db pointing at a directory, got nil")
 	}
 }

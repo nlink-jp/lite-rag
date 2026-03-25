@@ -7,6 +7,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`--db` global flag** — overrides `database.path` from the command line, allowing
+  multiple indexed collections to be switched without editing the config file.
+  Applies to all subcommands (`index`, `ask`, `serve`, `docs`).
+
+---
+
 ## [0.2.1] — 2026-03-21
 
 ### Added

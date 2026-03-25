@@ -276,16 +276,28 @@ LIMIT  ?
 ## 4. CLI インターフェース
 
 ```
-lite-rag [--config <path>] <command>
+lite-rag [--config <path>] [--db <path>] <command>
 
 コマンド:
-  index   <directory>   指定ディレクトリ以下の全 Markdown ファイルをインデックス
-  ask     <question>    インデックス済みドキュメントを使って質問に回答
-  serve                 HTTP API サーバーと組み込み Web UI を起動
-  version               バージョン情報を表示
+  index   --dir <directory>  ディレクトリ以下の *.md ファイルをインデックス
+          --file <file>       シングルファイルをインデックス（拡張子不問）
+  ask     <question>         インデックス済みドキュメントを使って質問に回答
+          --json              回答とソースを JSON オブジェクトで出力
+  serve                      HTTP API サーバーと組み込み Web UI を起動
+  docs                       インデックス済みドキュメントを管理（list / show / delete）
+  version                    バージョン情報を表示
+
+グローバルフラグ:
+  --config <path>   設定ファイル（デフォルト: ~/.config/lite-rag/config.toml、XDG）
+  --db <path>       データベースファイルパス（config の database.path を上書き）
 ```
 
-グローバルフラグ `--config` のデフォルトは `~/.config/lite-rag/config.toml`（XDG）。
+`--db` を使うと設定ファイルを編集せずに複数のインデックス済みコレクションを切り替えられます:
+
+```sh
+lite-rag --db ./docs-en.db ask "How does chunking work?"
+lite-rag --db ./docs-ja.db ask "チャンク分割はどう動く？"
+```
 
 ---
 

@@ -115,15 +115,19 @@ Environment variables override file settings:
 ## Usage
 
 ```
-lite-rag [--config <path>] <command>
+lite-rag [--config <path>] [--db <path>] <command>
 
 Commands:
   index   --dir <directory>   Index all *.md files under a directory
           --file <file>        Index a single file (any extension)
   ask     <question>           Answer a question using the indexed documents
-  serve                 Start the HTTP API server with embedded Web UI
-  docs                  Manage indexed documents
-  version               Print version information
+  serve                        Start the HTTP API server with embedded Web UI
+  docs                         Manage indexed documents
+  version                      Print version information
+
+Global flags:
+  --config <path>   Config file path (default: ~/.config/lite-rag/config.toml)
+  --db <path>       Database file path (overrides config database.path)
 ```
 
 ### index
@@ -147,6 +151,7 @@ Commands:
 ```sh
 ./bin/lite-rag ask "What is the default chunk size?"
 ./bin/lite-rag --config /etc/lite-rag.toml ask "Installation steps?"
+./bin/lite-rag --db ./project-b.db ask "What is the default chunk size?"
 
 # JSON output (answer + sources as a single JSON object)
 ./bin/lite-rag ask --json "What is the default chunk size?"

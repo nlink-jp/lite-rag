@@ -107,15 +107,19 @@ log_level = "info"             # info | debug | warn | error
 ## 使い方
 
 ```
-lite-rag [--config <path>] <command>
+lite-rag [--config <path>] [--db <path>] <command>
 
 コマンド:
   index   --dir <directory>  ディレクトリ以下の *.md ファイルをインデックス
           --file <file>       シングルファイルをインデックス（拡張子不問）
-  ask     <question>    インデックス済みドキュメントを使って質問に回答
-  serve                 HTTP API サーバーと組み込み Web UI を起動
-  docs                  インデックス済みドキュメントを管理
-  version               バージョン情報を表示
+  ask     <question>         インデックス済みドキュメントを使って質問に回答
+  serve                      HTTP API サーバーと組み込み Web UI を起動
+  docs                       インデックス済みドキュメントを管理
+  version                    バージョン情報を表示
+
+グローバルフラグ:
+  --config <path>   設定ファイルパス（デフォルト: ~/.config/lite-rag/config.toml）
+  --db <path>       データベースファイルパス（config の database.path を上書き）
 ```
 
 ### index
@@ -139,6 +143,7 @@ lite-rag [--config <path>] <command>
 ```sh
 ./bin/lite-rag ask "デフォルトのチャンクサイズは？"
 ./bin/lite-rag --config /etc/lite-rag.toml ask "インストール手順は？"
+./bin/lite-rag --db ./project-b.db ask "デフォルトのチャンクサイズは？"
 
 # JSON 出力（回答とソースを1つの JSON オブジェクトで出力）
 ./bin/lite-rag ask --json "デフォルトのチャンクサイズは？"

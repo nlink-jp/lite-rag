@@ -329,19 +329,29 @@ and merges overlapping spans before returning passages to the caller (§3.3.1).
 ## 4. CLI Interface
 
 ```
-lite-rag [--config <path>] <command>
+lite-rag [--config <path>] [--db <path>] <command>
 
 Commands:
   index   --dir <directory>   Index all *.md files under a directory
           --file <file>        Index a single file (any extension)
-  ask     <question>    Answer a question using the indexed documents
-          --json         Output answer and sources as a JSON object
-  serve                 Start the HTTP API server with embedded Web UI
-  docs                  Manage indexed documents (list / show / delete)
-  version               Print version information
+  ask     <question>           Answer a question using the indexed documents
+          --json               Output answer and sources as a JSON object
+  serve                        Start the HTTP API server with embedded Web UI
+  docs                         Manage indexed documents (list / show / delete)
+  version                      Print version information
+
+Global flags:
+  --config <path>   Config file (default: ~/.config/lite-rag/config.toml, XDG)
+  --db <path>       Database file path; overrides config database.path
 ```
 
-Global flag `--config` defaults to `~/.config/lite-rag/config.toml` (XDG).
+`--db` is useful for switching between multiple indexed collections without
+editing the config file:
+
+```sh
+lite-rag --db ./docs-en.db ask "How does chunking work?"
+lite-rag --db ./docs-ja.db ask "チャンク分割はどう動く？"
+```
 
 ---
 

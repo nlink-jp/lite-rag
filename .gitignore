@@ -15,6 +15,9 @@ dist/
 coverage.out
 *.out
 
+# External source
+external/
+
 # macOS
 .DS_Store
 

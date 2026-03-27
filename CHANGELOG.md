@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [Unreleased]
+## [0.2.3] — 2026-03-27
 
 ### Added
 
@@ -156,6 +156,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 Windows is not supported due to CGo constraints from `go-duckdb`.
 
+[0.2.3]: https://github.com/magifd2/lite-rag/releases/tag/v0.2.3
 [0.2.2]: https://github.com/magifd2/lite-rag/releases/tag/v0.2.2
 [0.2.1]: https://github.com/magifd2/lite-rag/releases/tag/v0.2.1
 [0.2.0]: https://github.com/magifd2/lite-rag/releases/tag/v0.2.0

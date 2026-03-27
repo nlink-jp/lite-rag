@@ -51,6 +51,61 @@ func (idx *Indexer) IndexFile(ctx context.Context, path string) error {
 	return idx.indexFile(ctx, path)
 }
 
+// ReindexStats summarises the outcome of a Reindex run.
+type ReindexStats struct {
+	Reindexed int // documents successfully re-embedded with the current model
+	Errors    int // documents that failed to re-embed
+}
+
+// Reindex re-embeds all documents in the DB whose embedding model differs from
+// the current model, using the chunk text already stored in the database.
+// No file system access is required, so documents whose source files have been
+// deleted can still be re-embedded.
+func (idx *Indexer) Reindex(ctx context.Context) (ReindexStats, error) {
+	stale, err := idx.db.ListStaleDocuments(idx.embeddingModel)
+	if err != nil {
+		return ReindexStats{}, fmt.Errorf("list stale documents: %w", err)
+	}
+
+	var stats ReindexStats
+	for _, doc := range stale {
+		if err := idx.reembedDocument(ctx, doc.ID, doc.FilePath); err != nil {
+			slog.Warn("reindex failed", "path", doc.FilePath, "error", err)
+			stats.Errors++
+			continue
+		}
+		slog.Info("reindexed", "path", doc.FilePath, "model", idx.embeddingModel)
+		stats.Reindexed++
+	}
+	return stats, nil
+}
+
+// reembedDocument re-embeds a single document using the chunk text stored in the DB.
+func (idx *Indexer) reembedDocument(ctx context.Context, docID, filePath string) error {
+	chunks, err := idx.db.DocumentChunks(docID)
+	if err != nil {
+		return fmt.Errorf("get chunks for %s: %w", filePath, err)
+	}
+	if len(chunks) == 0 {
+		return nil
+	}
+
+	texts := make([]string, len(chunks))
+	for i, c := range chunks {
+		texts[i] = "search_document: " + normalizer.StripMarkdown(c.Content)
+	}
+
+	embeddings, err := idx.emb.Embed(ctx, texts)
+	if err != nil {
+		return fmt.Errorf("embed %s: %w", filePath, err)
+	}
+
+	if err := idx.db.UpdateDocumentEmbeddings(docID, idx.embeddingModel, chunks, embeddings); err != nil {
+		return fmt.Errorf("update embeddings for %s: %w", filePath, err)
+	}
+	return nil
+}
+
 // IndexDir walks dir recursively and indexes all *.md files.
 // Per-file errors are logged and do not abort the overall run.
 func (idx *Indexer) IndexDir(ctx context.Context, dir string) error {

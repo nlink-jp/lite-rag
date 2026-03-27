@@ -185,6 +185,130 @@ func TestAdjacentChunks_ClosedDB(t *testing.T) {
 	}
 }
 
+// ── ListStaleDocuments ──────────────────────────────────────────────────────
+
+func TestListStaleDocuments_ReturnsOnlyStale(t *testing.T) {
+	db := newTestDB(t)
+
+	insert := func(id, fp, model string) {
+		doc := database.DocumentRow{
+			ID: id, FilePath: fp, FileHash: "h",
+			TotalChunks: 1, IndexedAt: time.Now().UTC(),
+			EmbeddingModel: model,
+		}
+		if err := db.ReplaceDocument(doc, nil); err != nil {
+			t.Fatalf("ReplaceDocument: %v", err)
+		}
+	}
+
+	insert("d1", "/old.md", "model-v1")
+	insert("d2", "/current.md", "model-v2")
+	insert("d3", "/also-old.md", "model-v1")
+
+	stale, err := db.ListStaleDocuments("model-v2")
+	if err != nil {
+		t.Fatalf("ListStaleDocuments: %v", err)
+	}
+	if len(stale) != 2 {
+		t.Fatalf("expected 2 stale documents, got %d", len(stale))
+	}
+	// must be ordered by file_path
+	if stale[0].FilePath != "/also-old.md" || stale[1].FilePath != "/old.md" {
+		t.Errorf("unexpected order: %v", []string{stale[0].FilePath, stale[1].FilePath})
+	}
+}
+
+func TestListStaleDocuments_EmptyWhenAllCurrent(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 0, IndexedAt: time.Now().UTC(),
+		EmbeddingModel: "current-model",
+	}
+	if err := db.ReplaceDocument(doc, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	stale, err := db.ListStaleDocuments("current-model")
+	if err != nil {
+		t.Fatalf("ListStaleDocuments: %v", err)
+	}
+	if len(stale) != 0 {
+		t.Errorf("expected 0 stale documents, got %d", len(stale))
+	}
+}
+
+// ── UpdateDocumentEmbeddings ────────────────────────────────────────────────
+
+func TestUpdateDocumentEmbeddings_UpdatesModelAndVectors(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 2, IndexedAt: time.Now().UTC(),
+		EmbeddingModel: "model-v1",
+	}
+	chunks := []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "first",
+			Embedding: []float32{1, 0}},
+		{ID: "c1", DocumentID: "d1", ChunkIndex: 1, Content: "second",
+			Embedding: []float32{0, 1}},
+	}
+	if err := db.ReplaceDocument(doc, chunks); err != nil {
+		t.Fatal(err)
+	}
+
+	// Re-embed with new vectors and new model.
+	stored, err := db.DocumentChunks("d1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newEmbeddings := [][]float32{{0, 1}, {1, 0}} // flipped
+	if err := db.UpdateDocumentEmbeddings("d1", "model-v2", stored, newEmbeddings); err != nil {
+		t.Fatalf("UpdateDocumentEmbeddings: %v", err)
+	}
+
+	// document must now have model-v2.
+	_, _, model, err := db.FindDocumentByPath("/f.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if model != "model-v2" {
+		t.Errorf("embedding_model = %q, want %q", model, "model-v2")
+	}
+
+	// chunks must be searchable with model-v2 and have new vectors.
+	// Query [0,1] — previously chunk 1; after flip it should be chunk 0.
+	hits, err := db.SimilarChunks([]float32{0, 1}, 1, "model-v2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hits) != 1 {
+		t.Fatalf("expected 1 hit, got %d", len(hits))
+	}
+	if hits[0].Content != "first" {
+		t.Errorf("top hit content = %q, want %q", hits[0].Content, "first")
+	}
+}
+
+func TestUpdateDocumentEmbeddings_MismatchedLength(t *testing.T) {
+	db := newTestDB(t)
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h",
+		TotalChunks: 1, IndexedAt: time.Now().UTC(),
+	}
+	if err := db.ReplaceDocument(doc, []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "x"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	stored, _ := db.DocumentChunks("d1")
+	// Pass 2 embeddings for 1 chunk — must error.
+	if err := db.UpdateDocumentEmbeddings("d1", "m", stored, [][]float32{{1}, {0}}); err == nil {
+		t.Error("expected error for mismatched lengths, got nil")
+	}
+}
+
 // ── EmbeddingModel ─────────────────────────────────────────────────────────
 
 func TestFindDocumentByPath_ReturnsEmbeddingModel(t *testing.T) {

@@ -107,6 +107,63 @@ func (db *DB) DeleteDocument(id string) error {
 	return nil
 }
 
+// ListStaleDocuments returns documents whose embedding_model differs from
+// currentModel, ordered by file_path. Used by the reindex command to find
+// documents that need re-embedding after a model change.
+func (db *DB) ListStaleDocuments(currentModel string) ([]DocumentRecord, error) {
+	rows, err := db.conn.Query(`
+		SELECT id, file_path, file_hash, total_chunks,
+		       strftime(indexed_at, '%Y-%m-%d %H:%M:%S'), embedding_model
+		FROM documents
+		WHERE embedding_model != ?
+		ORDER BY file_path
+	`, currentModel)
+	if err != nil {
+		return nil, fmt.Errorf("list stale documents: %w", err)
+	}
+	defer rows.Close()
+
+	var docs []DocumentRecord
+	for rows.Next() {
+		var d DocumentRecord
+		if err := rows.Scan(&d.ID, &d.FilePath, &d.FileHash,
+			&d.TotalChunks, &d.IndexedAt, &d.EmbeddingModel); err != nil {
+			return nil, fmt.Errorf("scan document: %w", err)
+		}
+		docs = append(docs, d)
+	}
+	return docs, rows.Err()
+}
+
+// UpdateDocumentEmbeddings replaces the embedding vectors for all chunks of a
+// document and updates the document's embedding_model, all in one transaction.
+// chunks must be ordered by chunk_index and len(chunks) must equal len(embeddings).
+func (db *DB) UpdateDocumentEmbeddings(docID, newModel string, chunks []ChunkRecord, embeddings [][]float32) error {
+	if len(chunks) != len(embeddings) {
+		return fmt.Errorf("chunk count (%d) != embedding count (%d)", len(chunks), len(embeddings))
+	}
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	for i, c := range chunks {
+		if _, err := tx.Exec(
+			`UPDATE chunks SET embedding = ? WHERE document_id = ? AND chunk_index = ?`,
+			embeddings[i], docID, c.ChunkIndex,
+		); err != nil {
+			return fmt.Errorf("update chunk %d embedding: %w", c.ChunkIndex, err)
+		}
+	}
+	if _, err := tx.Exec(
+		`UPDATE documents SET embedding_model = ? WHERE id = ?`, newModel, docID,
+	); err != nil {
+		return fmt.Errorf("update document model: %w", err)
+	}
+	return tx.Commit()
+}
+
 // DocumentChunks returns all chunks for a document ordered by chunk_index.
 func (db *DB) DocumentChunks(id string) ([]ChunkRecord, error) {
 	// Verify the document exists first.

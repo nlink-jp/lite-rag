@@ -299,6 +299,96 @@ func TestIndexFile_SkipsUnchangedFile(t *testing.T) {
 	}
 }
 
+// ── Reindex tests ─────────────────────────────────────────────────────────
+
+func TestReindex_ReembedsStaleDocs(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "a.md", "# Alpha\n\nContent A.")
+	writeFile(t, dir, "b.md", "# Beta\n\nContent B.")
+
+	db := openDB(t)
+	emb := &mockEmbedder{dim: 4}
+
+	// Index both files with model-v1.
+	idx1 := indexer.New(db, emb, "model-v1", testCfg())
+	if err := idx1.IndexDir(context.Background(), dir); err != nil {
+		t.Fatal(err)
+	}
+	callsAfterV1 := emb.calls
+
+	// Reindex with model-v2 — should re-embed both docs using stored text.
+	idx2 := indexer.New(db, emb, "model-v2", testCfg())
+	stats, err := idx2.Reindex(context.Background())
+	if err != nil {
+		t.Fatalf("Reindex: %v", err)
+	}
+
+	if stats.Reindexed != 2 {
+		t.Errorf("Reindexed = %d, want 2", stats.Reindexed)
+	}
+	if stats.Errors != 0 {
+		t.Errorf("Errors = %d, want 0", stats.Errors)
+	}
+	if emb.calls <= callsAfterV1 {
+		t.Error("Embed should have been called again during Reindex")
+	}
+}
+
+func TestReindex_NoStaleDocsIsNoop(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "doc.md", "# Doc\n\nContent.")
+
+	db := openDB(t)
+	emb := &mockEmbedder{dim: 4}
+	idx := indexer.New(db, emb, "model-v1", testCfg())
+
+	if err := idx.IndexDir(context.Background(), dir); err != nil {
+		t.Fatal(err)
+	}
+	callsBefore := emb.calls
+
+	// Reindex with same model — nothing stale, Embed must not be called.
+	stats, err := idx.Reindex(context.Background())
+	if err != nil {
+		t.Fatalf("Reindex: %v", err)
+	}
+	if stats.Reindexed != 0 {
+		t.Errorf("Reindexed = %d, want 0", stats.Reindexed)
+	}
+	if emb.calls != callsBefore {
+		t.Errorf("Embed called %d extra time(s) when no stale docs", emb.calls-callsBefore)
+	}
+}
+
+func TestReindex_WorksWithoutSourceFile(t *testing.T) {
+	// Index a file, then delete it from disk, then reindex — must succeed using DB text.
+	dir := t.TempDir()
+	path := writeFile(t, dir, "tmp.md", "# Temp\n\nContent.")
+
+	db := openDB(t)
+	emb := &mockEmbedder{dim: 4}
+
+	idx1 := indexer.New(db, emb, "model-v1", testCfg())
+	if err := idx1.IndexFile(context.Background(), path); err != nil {
+		t.Fatal(err)
+	}
+
+	// Remove the source file.
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+
+	// Reindex with model-v2 — should work even though file is gone.
+	idx2 := indexer.New(db, emb, "model-v2", testCfg())
+	stats, err := idx2.Reindex(context.Background())
+	if err != nil {
+		t.Fatalf("Reindex: %v", err)
+	}
+	if stats.Reindexed != 1 {
+		t.Errorf("Reindexed = %d, want 1", stats.Reindexed)
+	}
+}
+
 func TestIndexFile_ReturnsErrorDirectly(t *testing.T) {
 	dir := t.TempDir()
 	path := writeFile(t, dir, "doc.md", "# Test\n\nContent.")

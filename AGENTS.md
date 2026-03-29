@@ -11,7 +11,7 @@ Part of [lite-series](https://github.com/nlink-jp/lite-series).
 ## Build & test
 
 ```sh
-make build        # bin/lite-rag
+make build        # dist/lite-rag
 make check        # vet → lint → test → build → govulncheck (full gate)
 go test ./...     # tests only
 ```

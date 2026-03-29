@@ -50,16 +50,16 @@ make setup
 make build
 
 # ディレクトリをインデックス
-./bin/lite-rag index --dir /path/to/docs
+./dist/lite-rag index --dir /path/to/docs
 
 # シングルファイルをインデックス
-./bin/lite-rag index --file /path/to/doc.md
+./dist/lite-rag index --file /path/to/doc.md
 
 # 質問する（CLI）
-./bin/lite-rag ask "リトライポリシーの設定方法は？"
+./dist/lite-rag ask "リトライポリシーの設定方法は？"
 
 # または Web UI サーバーを起動する
-./bin/lite-rag serve        # http://127.0.0.1:8080 で起動
+./dist/lite-rag serve        # http://127.0.0.1:8080 で起動
 ```
 
 ---
@@ -127,11 +127,11 @@ lite-rag [--config <path>] [--db <path>] <command>
 
 ```sh
 # ディレクトリ以下の *.md ファイルをすべてインデックス（再帰的）
-./bin/lite-rag index --dir ./docs
+./dist/lite-rag index --dir ./docs
 
 # シングルファイルをインデックス（拡張子不問）
-./bin/lite-rag index --file ./docs/notes.md
-./bin/lite-rag index --file ./release-notes.txt
+./dist/lite-rag index --file ./docs/notes.md
+./dist/lite-rag index --file ./release-notes.txt
 ```
 
 - `--dir`: 指定ディレクトリを再帰的にスキャンし `*.md` ファイルのみ処理します
@@ -143,10 +143,10 @@ lite-rag [--config <path>] [--db <path>] <command>
 
 ```sh
 # config の models.embedding を変更した後に実行
-./bin/lite-rag reindex
+./dist/lite-rag reindex
 
 # 特定のDBを対象にする場合
-./bin/lite-rag --db ./project.db reindex
+./dist/lite-rag --db ./project.db reindex
 ```
 
 - DB 内で `embedding_model` が現在の設定と異なるドキュメントをすべて検出します
@@ -156,12 +156,12 @@ lite-rag [--config <path>] [--db <path>] <command>
 ### ask
 
 ```sh
-./bin/lite-rag ask "デフォルトのチャンクサイズは？"
-./bin/lite-rag --config /etc/lite-rag.toml ask "インストール手順は？"
-./bin/lite-rag --db ./project-b.db ask "デフォルトのチャンクサイズは？"
+./dist/lite-rag ask "デフォルトのチャンクサイズは？"
+./dist/lite-rag --config /etc/lite-rag.toml ask "インストール手順は？"
+./dist/lite-rag --db ./project-b.db ask "デフォルトのチャンクサイズは？"
 
 # JSON 出力（回答とソースを1つの JSON オブジェクトで出力）
-./bin/lite-rag ask --json "デフォルトのチャンクサイズは？"
+./dist/lite-rag ask --json "デフォルトのチャンクサイズは？"
 ```
 
 - 質問を埋め込み、DuckDB で上位 K 件の類似チャンクを検索します
@@ -182,8 +182,8 @@ lite-rag [--config <path>] [--db <path>] <command>
 ### serve
 
 ```sh
-./bin/lite-rag serve                     # 127.0.0.1:8080 でリッスン（デフォルト）
-./bin/lite-rag serve --addr 0.0.0.0:9090
+./dist/lite-rag serve                     # 127.0.0.1:8080 でリッスン（デフォルト）
+./dist/lite-rag serve --addr 0.0.0.0:9090
 ```
 
 ローカル HTTP サーバーを起動します。ブラウザで `http://127.0.0.1:8080` を開いてください。
@@ -200,16 +200,16 @@ lite-rag [--config <path>] [--db <path>] <command>
 
 ```sh
 # インデックス済みドキュメントをテキスト一覧で表示
-./bin/lite-rag docs list
+./dist/lite-rag docs list
 
 # JSON 形式で出力（機械処理向け）
-./bin/lite-rag docs list --json
+./dist/lite-rag docs list --json
 
 # ドキュメント ID を指定してコンテンツを表示
-./bin/lite-rag docs show <document-id>
+./dist/lite-rag docs show <document-id>
 
 # ドキュメントとその全チャンクを削除
-./bin/lite-rag docs delete <document-id>
+./dist/lite-rag docs delete <document-id>
 ```
 
 `<document-id>` は `docs list` で表示される 64 文字の SHA-256 ハッシュです。

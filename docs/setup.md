@@ -30,7 +30,7 @@ make setup
 make build
 
 # Run
-./bin/lite-rag --help
+./dist/lite-rag --help
 ```
 
 ## LM Studio Configuration
@@ -93,7 +93,7 @@ No additional tools required.
 
 ```sh
 make cross-build-darwin
-# Produces: bin/lite-rag-darwin-arm64  bin/lite-rag-darwin-amd64
+# Produces: dist/lite-rag-darwin-arm64  dist/lite-rag-darwin-amd64
 ```
 
 ### linux targets (via container)
@@ -105,7 +105,7 @@ C++ runtime. The easiest approach is to run the build inside a container:
 ```sh
 # Requires podman (brew install podman) or docker
 make cross-build-linux
-# Produces: bin/lite-rag-linux-amd64  bin/lite-rag-linux-arm64
+# Produces: dist/lite-rag-linux-amd64  dist/lite-rag-linux-arm64
 ```
 
 The Makefile detects `podman` first, then falls back to `docker`.

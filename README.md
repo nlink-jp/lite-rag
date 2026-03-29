@@ -58,16 +58,16 @@ make setup
 make build
 
 # Index a directory of Markdown files
-./bin/lite-rag index --dir /path/to/docs
+./dist/lite-rag index --dir /path/to/docs
 
 # Index a single file
-./bin/lite-rag index --file /path/to/doc.md
+./dist/lite-rag index --file /path/to/doc.md
 
 # Ask a question (CLI)
-./bin/lite-rag ask "How do I configure the retry policy?"
+./dist/lite-rag ask "How do I configure the retry policy?"
 
 # Or start the Web UI server
-./bin/lite-rag serve        # opens at http://127.0.0.1:8080
+./dist/lite-rag serve        # opens at http://127.0.0.1:8080
 ```
 
 ---
@@ -135,11 +135,11 @@ Global flags:
 
 ```sh
 # Index all *.md files under a directory (recursive)
-./bin/lite-rag index --dir ./docs
+./dist/lite-rag index --dir ./docs
 
 # Index a single file (any extension)
-./bin/lite-rag index --file ./docs/notes.md
-./bin/lite-rag index --file ./release-notes.txt
+./dist/lite-rag index --file ./docs/notes.md
+./dist/lite-rag index --file ./release-notes.txt
 ```
 
 - `--dir`: walks the directory recursively; processes only `*.md` files.
@@ -151,10 +151,10 @@ Global flags:
 
 ```sh
 # Re-embed all documents after changing models.embedding in the config
-./bin/lite-rag reindex
+./dist/lite-rag reindex
 
 # Target a specific database
-./bin/lite-rag --db ./project.db reindex
+./dist/lite-rag --db ./project.db reindex
 ```
 
 - Finds all documents whose stored `embedding_model` differs from the current config.
@@ -164,12 +164,12 @@ Global flags:
 ### ask
 
 ```sh
-./bin/lite-rag ask "What is the default chunk size?"
-./bin/lite-rag --config /etc/lite-rag.toml ask "Installation steps?"
-./bin/lite-rag --db ./project-b.db ask "What is the default chunk size?"
+./dist/lite-rag ask "What is the default chunk size?"
+./dist/lite-rag --config /etc/lite-rag.toml ask "Installation steps?"
+./dist/lite-rag --db ./project-b.db ask "What is the default chunk size?"
 
 # JSON output (answer + sources as a single JSON object)
-./bin/lite-rag ask --json "What is the default chunk size?"
+./dist/lite-rag ask --json "What is the default chunk size?"
 ```
 
 - Embeds the question, searches DuckDB for the top-K similar chunks.
@@ -194,8 +194,8 @@ Global flags:
 ### serve
 
 ```sh
-./bin/lite-rag serve                     # listen on 127.0.0.1:8080 (default)
-./bin/lite-rag serve --addr 0.0.0.0:9090
+./dist/lite-rag serve                     # listen on 127.0.0.1:8080 (default)
+./dist/lite-rag serve --addr 0.0.0.0:9090
 ```
 
 Starts a local HTTP server. Open `http://127.0.0.1:8080` in a browser.
@@ -212,16 +212,16 @@ Manage documents stored in the index database.
 
 ```sh
 # List all indexed documents (text table)
-./bin/lite-rag docs list
+./dist/lite-rag docs list
 
 # List as JSON (machine-readable)
-./bin/lite-rag docs list --json
+./dist/lite-rag docs list --json
 
 # Show reconstructed content of a document by ID
-./bin/lite-rag docs show <document-id>
+./dist/lite-rag docs show <document-id>
 
 # Delete a document and all its chunks
-./bin/lite-rag docs delete <document-id>
+./dist/lite-rag docs delete <document-id>
 ```
 
 `<document-id>` is the 64-character SHA-256 hex shown in `docs list`.
@@ -241,7 +241,7 @@ make cross-build-darwin
 make cross-build-linux
 ```
 
-Binaries are placed in `bin/`. See [docs/setup.md](docs/setup.md) for cross-compilation details.
+Binaries are placed in `dist/`. See [docs/setup.md](docs/setup.md) for cross-compilation details.
 
 ---
 

@@ -7,6 +7,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.2.7] — 2026-05-23
+
+### Changed
+
+- **Darwin releases are now Developer ID signed and Apple-notarized.**
+  The `lite-rag` binary inside
+  `lite-rag-v0.2.7-darwin-{amd64,arm64}.tar.gz` carries a full Apple
+  Developer ID Application signature and a notarization ticket from
+  Apple. End users on macOS no longer need to bypass Gatekeeper
+  with right-click → Open or `xattr -d com.apple.quarantine` on
+  first launch; local users who place `lite-rag` under
+  Dropbox-synced (or any other FileProvider-managed) paths are no
+  longer killed by macOS's ad-hoc + provenance distrust policy.
+  Pipeline: `scripts/codesign-darwin.sh` +
+  `scripts/notarize-darwin.sh`, driven by `make dist-darwin`.
+  Adopts the org-wide convention in `nlink-jp/.github`
+  CONVENTIONS.md §Code Signing. Apple's notary service only
+  accepts zip / dmg / pkg, so each signed binary is temp-zipped,
+  submitted, and the zip is discarded — the tar.gz distribution
+  format is preserved (notary tickets are CDHash-keyed on Apple's
+  servers and remain valid regardless of the final container).
+
+No behaviour change to the binary itself — feature-wise this is
+identical to v0.2.6.
+
 ## [0.2.6] — 2026-03-31
 
 ### Fixed

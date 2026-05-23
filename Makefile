@@ -20,6 +20,19 @@ GOVULNCHECK  := $(GOPATH)/bin/govulncheck
 VERSION    := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS    := -ldflags "-X main.version=$(VERSION)"
 
+# macOS Developer ID signing / notarization (see nlink-jp/.github
+# CONVENTIONS.md §Code Signing). Defaults match any Developer ID
+# Application cert in the keychain and the org-standard notary
+# profile. Builds without these fall back to ad-hoc / un-notarized
+# with a one-line warning — see scripts/codesign-darwin.sh. Apple's
+# notary service only accepts zip / dmg / pkg containers, so darwin
+# binaries are temp-zipped for submission and the existing tar.gz
+# distribution is preserved (notary tickets are CDHash-keyed on
+# Apple's servers and remain valid regardless of the final
+# container format).
+CODESIGN_IDENTITY ?= Developer ID Application
+NOTARY_PROFILE    ?= nlink-jp-notary
+
 # Container runtime (podman preferred, docker as fallback)
 CONTAINER  := $(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 # Go image used for linux container builds — must match go.mod toolchain.
@@ -44,8 +57,9 @@ all: build
 
 ## build: compile the binary for the current platform
 build:
-	@mkdir -p bin
+	@mkdir -p dist
 	go build $(LDFLAGS) -o dist/$(BINARY) $(CMD)
+	@scripts/codesign-darwin.sh dist/$(BINARY) "$(CODESIGN_IDENTITY)"
 
 ## test: run all tests
 test:
@@ -91,13 +105,15 @@ cross-build: cross-build-darwin cross-build-linux
 
 ## cross-build-darwin: compile darwin/arm64 and darwin/amd64 (macOS host only)
 cross-build-darwin:
-	@mkdir -p bin
+	@mkdir -p dist
 	@echo "Building darwin/arm64 (native)..."
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 \
 		go build $(LDFLAGS) -o dist/$(BINARY)-darwin-arm64 $(CMD)
 	@echo "Building darwin/amd64..."
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 CC="clang -arch x86_64" \
 		go build $(LDFLAGS) -o dist/$(BINARY)-darwin-amd64 $(CMD)
+	@scripts/codesign-darwin.sh dist/$(BINARY)-darwin-arm64 "$(CODESIGN_IDENTITY)"
+	@scripts/codesign-darwin.sh dist/$(BINARY)-darwin-amd64 "$(CODESIGN_IDENTITY)"
 
 ## cross-build-linux: compile linux/amd64 and linux/arm64 inside a container
 cross-build-linux:
@@ -155,9 +171,27 @@ cross-build-linux-native:
 ## dist: build all platform binaries and package them as release archives
 dist: dist-darwin dist-linux
 
-## dist-darwin: package darwin/arm64 and darwin/amd64 archives
+## dist-darwin: package darwin/arm64 and darwin/amd64 archives (notarized)
+# Apple's notary service only accepts zip / dmg / pkg, so each signed
+# binary is temp-zipped, submitted to notarytool, then the zip is
+# discarded. The notary ticket is keyed by CDHash on Apple's servers,
+# so the tar.gz that ships actually contains the now-notarized binary.
 dist-darwin: cross-build-darwin
 	@mkdir -p $(DIST_DIR)
+	@echo "Notarizing darwin/arm64..."
+	@cp dist/$(BINARY)-darwin-arm64 /tmp/$(BINARY) && \
+		(cd /tmp && zip -j /tmp/$(BINARY)-notary.zip $(BINARY)) && \
+		scripts/notarize-darwin.sh /tmp/$(BINARY)-notary.zip "$(NOTARY_PROFILE)"; \
+		rc=$$?; \
+		rm -f /tmp/$(BINARY) /tmp/$(BINARY)-notary.zip; \
+		test $$rc -eq 0
+	@echo "Notarizing darwin/amd64..."
+	@cp dist/$(BINARY)-darwin-amd64 /tmp/$(BINARY) && \
+		(cd /tmp && zip -j /tmp/$(BINARY)-notary.zip $(BINARY)) && \
+		scripts/notarize-darwin.sh /tmp/$(BINARY)-notary.zip "$(NOTARY_PROFILE)"; \
+		rc=$$?; \
+		rm -f /tmp/$(BINARY) /tmp/$(BINARY)-notary.zip; \
+		test $$rc -eq 0
 	@echo "Packaging darwin/arm64..."
 	@mkdir -p /tmp/lite-rag-pkg && \
 		cp dist/$(BINARY)-darwin-arm64 /tmp/lite-rag-pkg/$(BINARY) && \

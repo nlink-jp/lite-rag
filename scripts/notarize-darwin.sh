@@ -13,11 +13,13 @@
 #
 # Behaviour:
 #   - Skips on non-Darwin hosts (cross-compile from Linux/etc.)
-#   - Skips when the keychain profile isn't present (other
-#     contributors / CI without credentials still produce the zip,
-#     just un-notarised). A one-line warning is printed.
-#   - On failure, prints the Apple-returned log and exits non-zero
-#     so a release pipeline can stop.
+#   - When the keychain profile cannot be used, the actual notarytool
+#     error is printed and the zip ships un-notarised (exit 0) so other
+#     contributors / CI without credentials still produce the zip. This
+#     distinguishes a genuinely missing profile from a real error such
+#     as an expired Apple Developer agreement (HTTP 403).
+#   - On submission failure, prints the Apple-returned log and exits
+#     non-zero so a release pipeline can stop.
 #
 # Why we don't staple: notarisation of bare CLI binaries inside a
 # zip cannot be stapled — `stapler staple` only works on app
@@ -42,11 +44,26 @@ fi
 
 # Probe the keychain profile cheaply (notarytool has no dedicated
 # "is profile present" command). `history` returns quickly without
-# uploading anything, so we use it as a liveness check.
-if ! xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1; then
-  echo "[notarize] Keychain profile '$PROFILE' not found; $ZIP will ship un-notarised" >&2
-  echo "[notarize] To enable, run once per machine:" >&2
-  echo "[notarize]   xcrun notarytool store-credentials $PROFILE --key <p8> --key-id <id> --issuer <uuid>" >&2
+# uploading anything, so we use it as a liveness check. Capture its
+# output so a real failure (expired Apple agreement, auth, transient
+# network) is surfaced instead of being misreported as "profile not
+# found" — the old behaviour hid 403 "required agreement has expired"
+# errors behind a misleading message.
+if ! PROBE_OUT=$(xcrun notarytool history --keychain-profile "$PROFILE" 2>&1); then
+  echo "[notarize] Cannot use keychain profile '$PROFILE'; $ZIP will ship un-notarised." >&2
+  echo "[notarize] notarytool reported:" >&2
+  printf '%s\n' "$PROBE_OUT" | sed 's/^/[notarize]   /' >&2
+  case "$PROBE_OUT" in
+    *403*|*[Aa]greement*)
+      echo "[notarize] --> Apple Developer agreement issue, not a missing key." >&2
+      echo "[notarize]     Sign the updated agreement at https://developer.apple.com/account/" >&2
+      echo "[notarize]     (Account Holder), wait a few minutes, then retry." >&2
+      ;;
+    *)
+      echo "[notarize] --> If the profile is not set up on this machine, run once:" >&2
+      echo "[notarize]       xcrun notarytool store-credentials $PROFILE --key <p8> --key-id <id> --issuer <uuid>" >&2
+      ;;
+  esac
   exit 0
 fi
 

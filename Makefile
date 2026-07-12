@@ -237,3 +237,10 @@ $(GOLANGCI):
 
 $(GOVULNCHECK):
 	GOPATH=$(GOPATH) go install golang.org/x/vuln/cmd/govulncheck@latest
+
+# Homebrew tap generation (see scripts/release-brew.mk). After `make package`,
+# `make brew` generates this formula from the built darwin-arm64 zip into the
+# local nlink-jp/homebrew-tap checkout. The package target is unchanged.
+BREW_KIND := formula
+BREW_DESC := RAG CLI for Markdown documents using a local LLM
+include scripts/release-brew.mk

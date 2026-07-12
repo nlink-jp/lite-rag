@@ -222,7 +222,7 @@ lite-rag [--config <path>] [--db <path>] <command>
 # 現在のプラットフォーム向け
 make build
 
-# darwin 全アーキテクチャ（macOS ホスト）
+# darwin（macOS ホスト・arm64 のみ / Apple Silicon）
 make cross-build-darwin
 
 # Linux 向け（podman または docker が必要。または Linux ホストで実行）

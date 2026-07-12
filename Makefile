@@ -24,12 +24,10 @@ LDFLAGS    := -ldflags "-X main.version=$(VERSION)"
 # CONVENTIONS.md §Code Signing). Defaults match any Developer ID
 # Application cert in the keychain and the org-standard notary
 # profile. Builds without these fall back to ad-hoc / un-notarized
-# with a one-line warning — see scripts/codesign-darwin.sh. Apple's
-# notary service only accepts zip / dmg / pkg containers, so darwin
-# binaries are temp-zipped for submission and the existing tar.gz
-# distribution is preserved (notary tickets are CDHash-keyed on
-# Apple's servers and remain valid regardless of the final
-# container format).
+# with a one-line warning — see scripts/codesign-darwin.sh. darwin
+# release archives are .zip (per the org Release Archive Standard),
+# which notarytool accepts directly, so the shipped zip is submitted
+# to the notary service as-is (no temp-zip indirection).
 CODESIGN_IDENTITY ?= Developer ID Application
 NOTARY_PROFILE    ?= nlink-jp-notary
 
@@ -103,17 +101,13 @@ setup:
 ## cross-build: compile binaries for all target platforms
 cross-build: cross-build-darwin cross-build-linux
 
-## cross-build-darwin: compile darwin/arm64 and darwin/amd64 (macOS host only)
+## cross-build-darwin: compile darwin/arm64 (macOS host only; arm64-only policy, no Intel)
 cross-build-darwin:
 	@mkdir -p dist
 	@echo "Building darwin/arm64 (native)..."
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 \
 		go build $(LDFLAGS) -o dist/$(BINARY)-darwin-arm64 $(CMD)
-	@echo "Building darwin/amd64..."
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 CC="clang -arch x86_64" \
-		go build $(LDFLAGS) -o dist/$(BINARY)-darwin-amd64 $(CMD)
-	@scripts/codesign-darwin.sh dist/$(BINARY)-darwin-arm64 "$(CODESIGN_IDENTITY)"
-	@scripts/codesign-darwin.sh dist/$(BINARY)-darwin-amd64 "$(CODESIGN_IDENTITY)"
+	@scripts/codesign-darwin.sh dist/$(BINARY)-darwin-arm64 "$(CODESIGN_IDENTITY)" "$(BINARY)"
 
 ## cross-build-linux: compile linux/amd64 and linux/arm64 inside a container
 cross-build-linux:
@@ -161,69 +155,44 @@ cross-build-linux-native:
 # ── Distribution packages ─────────────────────────────────────────────────
 #
 # Each archive contains:
-#   lite-rag (or lite-rag.exe)   — the compiled binary
-#   config.example.toml          — reference configuration
-#   README.md                    — project readme
+#   lite-rag             — the compiled binary (canonical name)
+#   README.md            — project readme
+#   LICENSE              — license
+#   config.example.toml  — reference configuration
 #
-# Naming convention: lite-rag-<VERSION>-<OS>-<ARCH>.tar.gz
+# Naming (org Release Archive Standard): lite-rag-v<VERSION>-<OS>-<ARCH>.<ext>
+#   darwin → .zip, linux → .tar.gz
 #
 
 ## dist: build all platform binaries and package them as release archives
 dist: dist-darwin dist-linux
 
-## dist-darwin: package darwin/arm64 and darwin/amd64 archives (notarized)
-# Apple's notary service only accepts zip / dmg / pkg, so each signed
-# binary is temp-zipped, submitted to notarytool, then the zip is
-# discarded. The notary ticket is keyed by CDHash on Apple's servers,
-# so the tar.gz that ships actually contains the now-notarized binary.
+## dist-darwin: package the notarized darwin/arm64 .zip (macOS host only)
+# darwin ships arm64 only as a .zip, per the org Release Archive Standard.
+# The .zip is the shipped artifact and notarytool accepts it directly, so
+# there is no temp-zip indirection any more.
 dist-darwin: cross-build-darwin
 	@mkdir -p $(DIST_DIR)
-	@echo "Notarizing darwin/arm64..."
-	@cp dist/$(BINARY)-darwin-arm64 /tmp/$(BINARY) && \
-		(cd /tmp && zip -j /tmp/$(BINARY)-notary.zip $(BINARY)) && \
-		scripts/notarize-darwin.sh /tmp/$(BINARY)-notary.zip "$(NOTARY_PROFILE)"; \
-		rc=$$?; \
-		rm -f /tmp/$(BINARY) /tmp/$(BINARY)-notary.zip; \
-		test $$rc -eq 0
-	@echo "Notarizing darwin/amd64..."
-	@cp dist/$(BINARY)-darwin-amd64 /tmp/$(BINARY) && \
-		(cd /tmp && zip -j /tmp/$(BINARY)-notary.zip $(BINARY)) && \
-		scripts/notarize-darwin.sh /tmp/$(BINARY)-notary.zip "$(NOTARY_PROFILE)"; \
-		rc=$$?; \
-		rm -f /tmp/$(BINARY) /tmp/$(BINARY)-notary.zip; \
-		test $$rc -eq 0
 	@echo "Packaging darwin/arm64..."
-	@mkdir -p /tmp/lite-rag-pkg && \
-		cp dist/$(BINARY)-darwin-arm64 /tmp/lite-rag-pkg/$(BINARY) && \
-		cp config.example.toml README.md /tmp/lite-rag-pkg/ && \
-		tar -czf $(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.tar.gz \
-			-C /tmp/lite-rag-pkg . && \
-		rm -rf /tmp/lite-rag-pkg
-	@echo "Packaging darwin/amd64..."
-	@mkdir -p /tmp/lite-rag-pkg && \
-		cp dist/$(BINARY)-darwin-amd64 /tmp/lite-rag-pkg/$(BINARY) && \
-		cp config.example.toml README.md /tmp/lite-rag-pkg/ && \
-		tar -czf $(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-amd64.tar.gz \
-			-C /tmp/lite-rag-pkg . && \
-		rm -rf /tmp/lite-rag-pkg
+	@rm -rf $(DIST_DIR)/_pkg && mkdir -p $(DIST_DIR)/_pkg
+	@cp dist/$(BINARY)-darwin-arm64 $(DIST_DIR)/_pkg/$(BINARY)
+	@cp config.example.toml README.md LICENSE $(DIST_DIR)/_pkg/
+	@( cd $(DIST_DIR)/_pkg && zip -q "../$(BINARY)-$(VERSION)-darwin-arm64.zip" * )
+	@rm -rf $(DIST_DIR)/_pkg
+	@echo "Notarizing darwin/arm64..."
+	@scripts/notarize-darwin.sh $(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip "$(NOTARY_PROFILE)"
 
 ## dist-linux: package linux/amd64 and linux/arm64 archives (requires container or Linux host)
 dist-linux: cross-build-linux
 	@mkdir -p $(DIST_DIR)
-	@echo "Packaging linux/amd64..."
-	@mkdir -p /tmp/lite-rag-pkg && \
-		cp dist/$(BINARY)-linux-amd64 /tmp/lite-rag-pkg/$(BINARY) && \
-		cp config.example.toml README.md /tmp/lite-rag-pkg/ && \
-		tar -czf $(DIST_DIR)/$(BINARY)-$(VERSION)-linux-amd64.tar.gz \
-			-C /tmp/lite-rag-pkg . && \
-		rm -rf /tmp/lite-rag-pkg
-	@echo "Packaging linux/arm64..."
-	@mkdir -p /tmp/lite-rag-pkg && \
-		cp dist/$(BINARY)-linux-arm64 /tmp/lite-rag-pkg/$(BINARY) && \
-		cp config.example.toml README.md /tmp/lite-rag-pkg/ && \
-		tar -czf $(DIST_DIR)/$(BINARY)-$(VERSION)-linux-arm64.tar.gz \
-			-C /tmp/lite-rag-pkg . && \
-		rm -rf /tmp/lite-rag-pkg
+	@for arch in amd64 arm64; do \
+		echo "Packaging linux/$$arch..."; \
+		rm -rf $(DIST_DIR)/_pkg && mkdir -p $(DIST_DIR)/_pkg; \
+		cp dist/$(BINARY)-linux-$$arch $(DIST_DIR)/_pkg/$(BINARY); \
+		cp config.example.toml README.md LICENSE $(DIST_DIR)/_pkg/; \
+		( cd $(DIST_DIR)/_pkg && tar -czf "../$(BINARY)-$(VERSION)-linux-$$arch.tar.gz" * ); \
+		rm -rf $(DIST_DIR)/_pkg; \
+	done
 
 # ── Evaluation ────────────────────────────────────────────────────────────
 #

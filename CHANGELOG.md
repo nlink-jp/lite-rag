@@ -7,6 +7,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.3.0] — 2026-07-12
+
+### Removed
+
+- **darwin/amd64 (Intel) pre-built binary.** macOS releases now ship
+  **arm64 only**, per the org-wide policy (darwin is Apple-Silicon only; no
+  universal binaries). Intel Mac users can build from source.
+
+### Changed
+
+- **darwin release archives are now `.zip`** (were `.tar.gz`), per
+  `nlink-jp/.github` CONVENTIONS.md §Release Archive Standard. Because the
+  shipped darwin archive is now a `.zip`, notarytool submits it directly —
+  the previous temp-zip-for-notarization indirection is gone. Linux archives
+  remain `.tar.gz`.
+- **`LICENSE` is now bundled** in every release archive (alongside
+  `README.md` and `config.example.toml`).
+- **darwin code-signature identifier** is now the canonical `lite-rag`
+  (was `lite-rag-darwin-arm64`), set via `codesign -i` so it stays stable
+  after the archived binary is renamed to its canonical name.
+
+No change to the binary's behaviour — a packaging / build-config release.
+
 ## [0.2.7] — 2026-05-23
 
 ### Changed

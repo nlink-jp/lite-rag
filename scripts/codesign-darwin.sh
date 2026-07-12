@@ -4,11 +4,15 @@
 # gracefully if codesigning is not possible.
 #
 # Usage:
-#   codesign-darwin.sh <binary> [identity]
+#   codesign-darwin.sh <binary> [identity] [identifier]
 #
 # Identity defaults to "Developer ID Application" — matches any Developer
 # ID Application certificate in the user's keychain. Override via env or
 # 2nd argument when more than one Developer ID identity is present.
+# Identifier (3rd arg) sets the code-signature identifier (-i). Pass the
+# canonical tool name so it stays stable even when the built file carries
+# an -<os>-<arch> suffix that is renamed away at package time. Defaults to
+# codesign's filename-derived value when omitted.
 #
 # Behaviour:
 #   - Skips silently on non-macOS hosts (cross-compile from Linux/etc.)
@@ -25,8 +29,9 @@
 
 set -e
 
-BINARY="${1:?Usage: $0 <binary> [identity]}"
+BINARY="${1:?Usage: $0 <binary> [identity] [identifier]}"
 IDENTITY="${2:-${CODESIGN_IDENTITY:-Developer ID Application}}"
+IDENTIFIER="${3:-}"
 
 # Cross-compile from non-Darwin: nothing to do
 if [ "$(uname)" != "Darwin" ]; then
@@ -49,5 +54,9 @@ if ! security find-identity -v -p codesigning 2>/dev/null | grep -q "$IDENTITY";
   exit 0
 fi
 
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$BINARY"
+if [ -n "$IDENTIFIER" ]; then
+  codesign --force --options runtime --timestamp -i "$IDENTIFIER" --sign "$IDENTITY" "$BINARY"
+else
+  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$BINARY"
+fi
 echo "[codesign] Signed $BINARY with '$IDENTITY'"

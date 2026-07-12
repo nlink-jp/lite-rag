@@ -234,7 +234,7 @@ Manage documents stored in the index database.
 # Current platform
 make build
 
-# All darwin platforms (macOS host)
+# darwin (macOS host; arm64 only — Apple Silicon)
 make cross-build-darwin
 
 # Linux platforms (requires podman or docker, or run on a Linux host)

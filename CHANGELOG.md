@@ -240,6 +240,10 @@ identical to v0.2.6.
 Windows is not supported due to CGo constraints from `go-duckdb`.
 
 [0.3.1]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.3.1
+[0.3.0]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.3.0
+[0.2.7]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.7
+[0.2.6]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.6
+[0.2.5]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.5
 [0.2.4]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.4
 [0.2.3]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.3
 [0.2.2]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.2.2

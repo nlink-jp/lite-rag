@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **`--version` now works.** The binary only implemented a `version`
+  subcommand, so `lite-rag --version` failed with "unknown flag" — and the
+  shared org homebrew formula template tests exactly that invocation, so
+  `brew test lite-rag` failed. `rootCmd.Version` is now set, which makes cobra
+  provide the flag. The `version` subcommand is unchanged, and both spellings
+  print the identical `lite-rag <version>` string.
+
 ## [0.3.0] — 2026-07-12
 
 ### Removed

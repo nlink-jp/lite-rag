@@ -129,6 +129,7 @@ Commands:
 Global flags:
   --config <path>   Config file path (default: ~/.config/lite-rag/config.toml)
   --db <path>       Database file path (overrides config database.path)
+  --version         Print version information (same output as `version`)
 ```
 
 ### index

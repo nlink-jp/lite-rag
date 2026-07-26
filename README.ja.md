@@ -121,6 +121,7 @@ lite-rag [--config <path>] [--db <path>] <command>
 グローバルフラグ:
   --config <path>   設定ファイルパス（デフォルト: ~/.config/lite-rag/config.toml）
   --db <path>       データベースファイルパス（config の database.path を上書き）
+  --version         バージョン情報を表示（`version` と同一の出力）
 ```
 
 ### index

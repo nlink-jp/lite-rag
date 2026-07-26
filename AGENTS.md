@@ -19,7 +19,7 @@ go test ./...     # tests only
 ## Key structure
 
 ```
-cmd/lite-rag/            ← CLI entry point (Cobra subcommands: index, ask, serve, reindex, docs)
+cmd/lite-rag/            ← CLI entry point (Cobra subcommands: index, ask, serve, reindex, docs, version; `--version` too — the org homebrew formula tests it)
 internal/config/         ← Config struct, Load(), env overrides
 internal/indexer/        ← Document chunking + embedding + DuckDB insert
 internal/retriever/      ← Vector search + context expansion + query rewrite

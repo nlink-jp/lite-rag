@@ -14,6 +14,7 @@ Part of [lite-series](https://github.com/nlink-jp/lite-series).
 make build        # dist/lite-rag
 make check        # vet → lint → test → build → govulncheck (full gate)
 go test ./...     # tests only
+make verify-release  # gate: .notarized marker + freshness (run before upload)
 ```
 
 ## Key structure

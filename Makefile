@@ -46,7 +46,7 @@ EVAL_LINK  := testdata/db/eval-current.db
 
 .PHONY: all build test lint vet vuln check setup \
         cross-build cross-build-darwin cross-build-linux cross-build-linux-native \
-        dist dist-darwin dist-linux \
+        dist dist-darwin dist-linux verify-release \
         eval-build-db eval \
         clean help
 
@@ -181,6 +181,22 @@ dist-darwin: cross-build-darwin
 	@rm -rf $(DIST_DIR)/_pkg
 	@echo "Notarizing darwin/arm64..."
 	@scripts/notarize-darwin.sh $(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip "$(NOTARY_PROFILE)"
+
+## verify-release: refuse to release an un-notarized zip (marker gate)
+verify-release:
+	@test -f "$(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" || { \
+		echo "verify-release: FAIL — $(BINARY)-$(VERSION)-darwin-arm64.zip has no notarization marker."; \
+		echo "  make dist-darwin must end with '[notarize] ...: Accepted'. Do not upload this zip."; \
+		exit 1; }
+	@test "$(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" -nt "$(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip" || { \
+		echo "verify-release: FAIL — the zip was rebuilt after its marker (re-run make dist-darwin)."; \
+		exit 1; }
+	@tmp=$$(mktemp -d) && \
+		unzip -oq "$(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip" -d "$$tmp" && \
+		"$$tmp/$(BINARY)" --version && \
+		spctl -a -vv -t install "$$tmp/$(BINARY)" 2>&1 | head -2 || true; \
+		rm -rf "$$tmp"
+	@echo "verify-release: OK ($(VERSION), notarization marker present)"
 
 ## dist-linux: package linux/amd64 and linux/arm64 archives (requires container or Linux host)
 dist-linux: cross-build-linux

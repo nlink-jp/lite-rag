@@ -81,7 +81,7 @@ macOS システムの `clang` が `-arch` によるマルチアーキテクチ�
 
 ```sh
 make cross-build-darwin
-# 生成物: dist/lite-rag-darwin-arm64  dist/lite-rag-darwin-amd64
+# 生成物: dist/lite-rag-darwin-arm64
 ```
 
 ### linux ターゲット（コンテナ経由）

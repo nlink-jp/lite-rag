@@ -93,7 +93,7 @@ No additional tools required.
 
 ```sh
 make cross-build-darwin
-# Produces: dist/lite-rag-darwin-arm64  dist/lite-rag-darwin-amd64
+# Produces: dist/lite-rag-darwin-arm64
 ```
 
 ### linux targets (via container)

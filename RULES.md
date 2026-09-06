@@ -82,7 +82,7 @@ All contributors (including Claude Code) must follow these rules.
 
 - Go is the baseline language for native/compiled code.
 - Build system: GNU `make` with a `Makefile` at the project root.
-- Target platforms: `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, `windows/amd64`.
+- Target platforms: `linux/amd64`, `linux/arm64`, `darwin/arm64`, `windows/amd64`. darwin is arm64-only (no Intel).
   - If Windows support is not feasible due to OS-level constraints, `linux` and `darwin` are acceptable.
 - Cross-compilation must work from a single host machine (use `GOOS`/`GOARCH` variables).
 - Code style: enforced via `gofmt` and `golangci-lint`.

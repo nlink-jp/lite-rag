@@ -43,7 +43,7 @@ While the primary interface is a CLI, the system should be designed with the pot
 
 ### 3.3. Non-Functional Requirements
 
--   **Portability:** The final executable should be cross-compiled for `linux/amd64`, `linux/arm64`, `darwin/amd64`, and `darwin/arm64`.
+-   **Portability:** The final executable should be cross-compiled for `linux/amd64`, `linux/arm64`, and `darwin/arm64`. darwin is arm64-only (no Intel), per the org Release Archive Standard; Windows is out of scope because the DuckDB binding requires cgo.
 -   **Performance:** Indexing and query response times should be reasonably fast for typical documentation sets.
 -   **Configuration:** The application must support external configuration (e.g., via a file like `config.toml` or environment variables) for settings like API endpoints, model names, and database paths.
 -   **Maintainability:** The codebase must adhere to the rules defined in `RULES.md`, promoting clarity, testability, and separation of concerns.

@@ -19,6 +19,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   informational `spctl` line may be ignored. Matches the org template
   (CONVENTIONS.md §Code Signing → Verifying a release).
 
+### Removed
+
+- Two build outputs committed with v0.1.0 at the repository root, `eval` and
+  `lite-rag` (about 61 MB and 62 MB), are no longer tracked. `make build` writes
+  to `dist/`, which is ignored. The names are deliberately not added to
+  `.gitignore`: `cmd/eval/` and `cmd/lite-rag/` would be ignored with them.
+
 ## [0.3.1] — 2026-07-26
 
 ### Fixed

@@ -13,9 +13,9 @@ Goal: Clean working skeleton with quality gates in place before any feature code
 - [x] Write `Makefile` with `build`, `test`, `lint`, `check`, `setup` targets
 - [x] Write `config.example.toml`
 - [x] Write `scripts/hooks/pre-commit` and `scripts/hooks/pre-push`
-- [x] Write `docs/setup.md` (hook installation, prerequisites)
-- [x] Write `docs/dependencies.md`
-- [x] Write `docs/structure.md`
+- [x] Write `docs/en/setup.md` (hook installation, prerequisites)
+- [x] Write `docs/en/dependencies.md`
+- [x] Write `docs/en/structure.md`
 
 Completion criteria: `make check` runs cleanly (nothing to lint/test yet, but the
 tooling itself works).
@@ -122,8 +122,8 @@ Goal: All documentation requirements from RULES.md satisfied.
 
 - [x] `README.md` — setup, usage, configuration reference
 - [x] `docs/ja/` — Japanese translations of all primary docs
-- [x] `docs/authoring-guide.md` — how to write Markdown for best retrieval results
-- [x] `docs/eval/query-rewrite.md` — query-rewrite feature evaluation report
+- [x] `docs/en/authoring-guide.md` — how to write Markdown for best retrieval results
+- [x] `docs/en/eval/query-rewrite.md` — query-rewrite feature evaluation report
 - [x] XDG default config path (`~/.config/lite-rag/config.toml`)
 
 ---

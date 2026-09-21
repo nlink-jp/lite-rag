@@ -18,7 +18,7 @@ documentation (`docs/`, 16 files, 165 chunks). Results compare baseline retrieva
 (no rewriting) against hybrid retrieval (LLM-assisted query rewriting).
 
 The evaluation database is stored at `testdata/db/lite-rag-docs-20260321.db`.
-It was built from the documentation at this point in time; `docs/eval/` is included
+It was built from the documentation at this point in time; `docs/en/eval/` is included
 but reflects results from the v1 evaluation run.
 
 ### Environment

@@ -13,9 +13,9 @@
 - [x] `build`、`test`、`lint`、`check`、`setup` ターゲットを持つ `Makefile` を作成
 - [x] `config.example.toml` を作成
 - [x] `scripts/hooks/pre-commit` と `scripts/hooks/pre-push` を作成
-- [x] `docs/setup.md`（フックインストール、前提条件）を作成
-- [x] `docs/dependencies.md` を作成
-- [x] `docs/structure.md` を作成
+- [x] `docs/en/setup.md`（フックインストール、前提条件）を作成
+- [x] `docs/en/dependencies.md` を作成
+- [x] `docs/en/structure.md` を作成
 
 完了基準: `make check` がクリーンに実行される（まだ lint/test 対象はないが、ツール自体が動作する）。
 
@@ -118,8 +118,8 @@
 
 - [x] `README.md` — セットアップ、使い方、設定リファレンス
 - [x] `docs/ja/` — 全一次ドキュメントの日本語訳
-- [x] `docs/authoring-guide.md` — 検索品質を最大化する Markdown の書き方
-- [x] `docs/eval/query-rewrite.md` — クエリリライト機能の性能評価レポート
+- [x] `docs/en/authoring-guide.md` — 検索品質を最大化する Markdown の書き方
+- [x] `docs/en/eval/query-rewrite.md` — クエリリライト機能の性能評価レポート
 - [x] XDG デフォルト設定パス（`~/.config/lite-rag/config.toml`）
 
 ---

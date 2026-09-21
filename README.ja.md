@@ -28,7 +28,7 @@ OpenAI 互換 API（例：[LM Studio](https://lmstudio.ai/)）経由でローカ
 | cc（clang/gcc） | 任意 | CGo コンパイル（go-duckdb 必須） |
 | LM Studio | 任意 | ローカル LLM 推論サーバー |
 
-詳細なセットアップ手順は [docs/ja/setup.md](setup.md) を参照してください。
+詳細なセットアップ手順は [docs/ja/setup.ja.md](docs/ja/setup.ja.md) を参照してください。
 
 ---
 
@@ -230,7 +230,7 @@ make cross-build-darwin
 make cross-build-linux
 ```
 
-バイナリは `bin/` に生成されます。クロスコンパイルの詳細は [docs/ja/setup.md](setup.md) を参照してください。
+バイナリは `bin/` に生成されます。クロスコンパイルの詳細は [docs/ja/setup.ja.md](docs/ja/setup.ja.md) を参照してください。
 
 ---
 
@@ -249,7 +249,7 @@ make check   # 品質ゲート全体：vet + lint + test + build
 
 ## アーキテクチャ
 
-詳細は [docs/design/architecture.md](../design/architecture.md) を参照してください。
+詳細は [docs/ja/design/architecture.ja.md](docs/ja/design/architecture.ja.md) を参照してください。
 
 ```
 index コマンド

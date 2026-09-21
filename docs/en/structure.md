@@ -49,17 +49,18 @@ lite-rag/
 │
 │
 ├── docs/
-│   ├── design/
-│   │   ├── architecture.md  # System architecture and component design
-│   │   └── plan.md          # Development phases and milestones
-│   ├── eval/
-│   │   └── query-rewrite.md # Query-rewrite feature evaluation report
-│   ├── ja/                  # Japanese translations of all primary docs
-│   ├── RFP.md               # Original requirements document
-│   ├── authoring-guide.md   # How to write Markdown documents for best retrieval results
-│   ├── dependencies.md      # Third-party dependency register (RULES.md §18)
-│   ├── setup.md             # Installation and development environment setup
-│   └── structure.md         # This file
+│   ├── en/                      # English documents (canonical, no language suffix)
+│   │   ├── design/
+│   │   │   ├── architecture.md  # System architecture and component design
+│   │   │   └── plan.md          # Development phases and milestones
+│   │   ├── eval/
+│   │   │   └── query-rewrite.md # Query-rewrite feature evaluation report
+│   │   ├── RFP.md               # Original requirements document
+│   │   ├── authoring-guide.md   # How to write Markdown documents for best retrieval results
+│   │   ├── dependencies.md      # Third-party dependency register (RULES.md §18)
+│   │   ├── setup.md             # Installation and development environment setup
+│   │   └── structure.md         # This file
+│   └── ja/                      # Japanese translations, mirroring en/ with the `.ja.md` suffix
 │
 ├── .go/                     # Project-local Go module cache (git-ignored)
 │   ├── pkg/mod/             # Downloaded module sources

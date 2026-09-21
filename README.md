@@ -36,7 +36,7 @@ mixed-script token estimation.
 | cc (clang/gcc) | any | CGo (required by go-duckdb) |
 | LM Studio | any | Local LLM inference server |
 
-See [docs/setup.md](docs/setup.md) for full setup instructions.
+See [docs/en/setup.md](docs/en/setup.md) for full setup instructions.
 
 ---
 
@@ -242,7 +242,7 @@ make cross-build-darwin
 make cross-build-linux
 ```
 
-Binaries are placed in `dist/`. See [docs/setup.md](docs/setup.md) for cross-compilation details.
+Binaries are placed in `dist/`. See [docs/en/setup.md](docs/en/setup.md) for cross-compilation details.
 
 ---
 
@@ -262,7 +262,7 @@ commit and push.
 
 ## Architecture
 
-See [docs/design/architecture.md](docs/design/architecture.md) for the full design.
+See [docs/en/design/architecture.md](docs/en/design/architecture.md) for the full design.
 
 ```
 index command

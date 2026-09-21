@@ -49,17 +49,18 @@ lite-rag/
 │
 │
 ├── docs/
-│   ├── design/
-│   │   ├── architecture.md  # システムアーキテクチャとコンポーネント設計
-│   │   └── plan.md          # 開発フェーズとマイルストーン
-│   ├── eval/
-│   │   └── query-rewrite.md # クエリリライト機能の性能評価レポート
-│   ├── ja/                  # 全一次ドキュメントの日本語訳
-│   ├── RFP.md               # 元要件定義書
-│   ├── authoring-guide.md   # 検索品質を最大化する Markdown ドキュメントの書き方
-│   ├── dependencies.md      # サードパーティ依存関係レジスター（RULES.md §18）
-│   ├── setup.md             # インストールと開発環境セットアップ
-│   └── structure.md         # このファイル
+│   ├── en/                      # 英語ドキュメント（一次言語、言語サフィックスなし）
+│   │   ├── design/
+│   │   │   ├── architecture.md  # システムアーキテクチャとコンポーネント設計
+│   │   │   └── plan.md          # 開発フェーズとマイルストーン
+│   │   ├── eval/
+│   │   │   └── query-rewrite.md # クエリリライト機能の性能評価レポート
+│   │   ├── RFP.md               # 元要件定義書
+│   │   ├── authoring-guide.md   # 検索品質を最大化する Markdown ドキュメントの書き方
+│   │   ├── dependencies.md      # サードパーティ依存関係レジスター（RULES.md §18）
+│   │   ├── setup.md             # インストールと開発環境セットアップ
+│   │   └── structure.md         # 本ファイルの原文
+│   └── ja/                      # 日本語訳。en/ と同じ構成で `.ja.md` サフィックスを付ける
 │
 ├── .go/                     # プロジェクトローカル Go モジュールキャッシュ（.gitignore 済み）
 │   ├── pkg/mod/             # ダウンロード済みモジュールソース

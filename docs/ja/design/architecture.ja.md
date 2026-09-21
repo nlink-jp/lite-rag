@@ -319,7 +319,7 @@ lite-rag reindex
 | darwin  | arm64   | ○ |
 | windows | amd64   | **なし** — `go-duckdb` の CGo 制約によりドロップ |
 
-クロスコンパイルの詳細は `docs/setup.md` を参照。
+クロスコンパイルの詳細は `docs/ja/setup.ja.md` を参照。
 
 ---
 
@@ -351,4 +351,4 @@ lite-rag reindex
 
 ---
 
-*一次言語: 英語。原文: `docs/design/architecture.md`*
+*一次言語: 英語。原文: `docs/en/design/architecture.md`*

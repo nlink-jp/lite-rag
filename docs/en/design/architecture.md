@@ -393,7 +393,7 @@ Cross-compilation strategy:
 | `github.com/BurntSushi/toml` | TOML config parsing | Minimal, widely used, no transitive deps |
 | `golang.org/x/text` | Unicode normalization (NFKC) | Standard library extension; required for reliable Japanese text handling |
 
-All dependencies are documented in `docs/dependencies.md` (Rule 18).
+All dependencies are documented in `docs/en/dependencies.md` (Rule 18).
 
 ---
 
@@ -415,4 +415,4 @@ All dependencies are documented in `docs/dependencies.md` (Rule 18).
 
 ---
 
-*Primary language: English. Japanese translation: `docs/ja/design/architecture.md`*
+*Primary language: English. Japanese translation: `docs/ja/design/architecture.ja.md`*

@@ -222,10 +222,10 @@ identical to v0.2.6.
   - darwin/arm64, darwin/amd64 — macOS system `clang -arch`
   - linux/amd64, linux/arm64 — Podman/Docker container with GCC cross-compilers
 
-- **Authoring guide** (`docs/authoring-guide.md`) — how to write Markdown documents
+- **Authoring guide** (`docs/en/authoring-guide.md`) — how to write Markdown documents
   for best RAG retrieval results, with Japanese translation.
 
-- **Query-rewrite evaluation report** (`docs/eval/query-rewrite.md`) — benchmark
+- **Query-rewrite evaluation report** (`docs/en/eval/query-rewrite.md`) — benchmark
   results comparing baseline vs. hybrid retrieval on the full documentation corpus.
 
 ### Platform support

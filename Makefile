@@ -219,7 +219,7 @@ dist-linux: cross-build-linux
 # version of the documentation was used:
 #   testdata/db/lite-rag-docs-YYYYMMDD.db
 #
-# docs/eval/ is intentionally included even though it describes results from
+# docs/en/eval/ is intentionally included even though it describes results from
 # an earlier run; the retriever should still score those documents correctly.
 #
 

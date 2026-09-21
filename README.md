@@ -280,4 +280,4 @@ MIT
 
 ---
 
-*日本語ドキュメント: [docs/ja/README.md](docs/ja/README.md)*
+*日本語ドキュメント: [README.ja.md](README.ja.md)*

@@ -270,4 +270,4 @@ MIT
 
 ---
 
-*English documentation: [README.md](../../README.md)*
+*English documentation: [README.md](README.md)*

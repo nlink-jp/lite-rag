@@ -183,8 +183,9 @@ dist-darwin: cross-build-darwin
 	@scripts/notarize-darwin.sh $(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip "$(NOTARY_PROFILE)"
 
 ## verify-release: refuse to release a zip that is un-notarized, stale, does
-## not unpack, does not run, or holds a build from another tag. Every step
-## fails closed; only the spctl line is informational.
+## not unpack, does not run, or holds a build from another tag, and a linux
+## archive that carries macOS metadata or anything but its canonical files.
+## Every step fails closed; only the spctl line is informational.
 verify-release:
 	@test -f "$(DIST_DIR)/$(BINARY)-$(VERSION)-darwin-arm64.zip.notarized" || { \
 		echo "verify-release: FAIL — $(BINARY)-$(VERSION)-darwin-arm64.zip has no notarization marker."; \
@@ -208,7 +209,23 @@ verify-release:
 		fi; \
 		rm -rf "$$tmp"; \
 		exit $$rc
-	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version)"
+	@for arch in amd64 arm64; do \
+		f="$(DIST_DIR)/$(BINARY)-$(VERSION)-linux-$$arch.tar.gz"; \
+		names=$$(tar --options 'tar:!mac-ext' -tzf "$$f") || { echo "verify-release: FAIL — $$f does not list."; exit 1; }; \
+		if printf '%s\n' "$$names" | grep -qE '(^|/)(\._|PaxHeader|__MACOSX)'; then \
+			echo "verify-release: FAIL — $$f carries macOS metadata entries."; \
+			echo "  macOS tar writes ._ members unless COPYFILE_DISABLE=1 is set, and lists them only with !mac-ext."; \
+			exit 1; fi; \
+		if gzip -dc "$$f" | grep -qa -e 'LIBARCHIVE.xattr' -e 'SCHILY.xattr'; then \
+			echo "verify-release: FAIL — $$f carries extended attributes as pax headers."; \
+			echo "  macOS tar writes them unless called with --no-xattrs; COPYFILE_DISABLE alone does not."; \
+			exit 1; fi; \
+		got=$$(printf '%s\n' "$$names" | LC_ALL=C sort | tr '\n' ' '); \
+		want=$$(printf '%s\n' "$(BINARY)" config.example.toml README.md LICENSE | LC_ALL=C sort | tr '\n' ' '); \
+		if [ "$$got" != "$$want" ]; then \
+			echo "verify-release: FAIL — $$f holds $$got; expected $$want"; exit 1; fi; \
+	done
+	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version, clean linux archives)"
 
 ## dist-linux: package linux/amd64 and linux/arm64 archives (requires container or Linux host)
 dist-linux: cross-build-linux
@@ -218,7 +235,7 @@ dist-linux: cross-build-linux
 		rm -rf $(DIST_DIR)/_pkg && mkdir -p $(DIST_DIR)/_pkg; \
 		cp dist/$(BINARY)-linux-$$arch $(DIST_DIR)/_pkg/$(BINARY); \
 		cp config.example.toml README.md LICENSE $(DIST_DIR)/_pkg/; \
-		( cd $(DIST_DIR)/_pkg && tar -czf "../$(BINARY)-$(VERSION)-linux-$$arch.tar.gz" * ); \
+		( cd $(DIST_DIR)/_pkg && COPYFILE_DISABLE=1 tar --no-xattrs -czf "../$(BINARY)-$(VERSION)-linux-$$arch.tar.gz" * ); \
 		rm -rf $(DIST_DIR)/_pkg; \
 	done
 

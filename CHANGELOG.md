@@ -18,6 +18,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   binary's `--version` must contain the tag being released, and only the
   informational `spctl` line may be ignored. Matches the org template
   (CONVENTIONS.md §Code Signing → Verifying a release).
+- **The Linux archives no longer carry macOS file metadata.** macOS `tar` wrote
+  each bundled file's extended attributes (`com.apple.provenance`, and a Dropbox
+  attribute where the tree is synced) into the `.tar.gz` twice: as AppleDouble
+  `._` members, which GNU tar extracts as stray `._<name>` files beside the real
+  ones, and as `LIBARCHIVE.xattr.*` / `SCHILY.xattr.*` pax headers, which it
+  reports as unknown keywords. `make dist-linux` now archives with
+  `COPYFILE_DISABLE=1 tar --no-xattrs`; each setting stops one of the two.
+  Archives already published still carry them; the files themselves are
+  unaffected.
 
 ### Removed
 
@@ -25,6 +34,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `lite-rag` (about 61 MB and 62 MB), are no longer tracked. `make build` writes
   to `dist/`, which is ignored. The names are deliberately not added to
   `.gitignore`: `cmd/eval/` and `cmd/lite-rag/` would be ignored with them.
+
+### Internal
+
+- `make verify-release` also judges each Linux archive: no AppleDouble or other
+  macOS metadata members — listed with `--options 'tar:!mac-ext'`, because a
+  plain macOS listing folds `._` members away — no extended attributes as pax
+  headers, and exactly the binary, `config.example.toml`, `README.md` and
+  `LICENSE`, compared in the C locale.
 
 ## [0.3.1] — 2026-07-26
 

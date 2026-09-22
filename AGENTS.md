@@ -15,7 +15,7 @@ make build        # dist/lite-rag
 make check        # vet → lint → test → build → govulncheck (full gate)
 go test ./...     # tests only
 make test-linux   # same suite on Linux (container)
-make verify-release  # gate: .notarized marker + freshness (run before upload)
+make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)
 ```
 
 ## Key structure

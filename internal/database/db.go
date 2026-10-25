@@ -3,6 +3,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/duckdb/duckdb-go/v2"
@@ -21,8 +22,7 @@ func Open(path string) (*DB, error) {
 	}
 	db := &DB{conn: conn}
 	if err := db.migrate(); err != nil {
-		conn.Close()
-		return nil, err
+		return nil, errors.Join(err, conn.Close())
 	}
 	return db, nil
 }
@@ -71,7 +71,7 @@ func (db *DB) ListDocuments() ([]DocumentRecord, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list documents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // read-only; rows.Err reports failures
 
 	var docs []DocumentRecord
 	for rows.Next() {
@@ -121,7 +121,7 @@ func (db *DB) ListStaleDocuments(currentModel string) ([]DocumentRecord, error) 
 	if err != nil {
 		return nil, fmt.Errorf("list stale documents: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // read-only; rows.Err reports failures
 
 	var docs []DocumentRecord
 	for rows.Next() {
@@ -184,7 +184,7 @@ func (db *DB) DocumentChunks(id string) ([]ChunkRecord, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query chunks: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // read-only; rows.Err reports failures
 
 	var chunks []ChunkRecord
 	for rows.Next() {

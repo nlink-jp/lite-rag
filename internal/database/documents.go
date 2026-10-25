@@ -113,7 +113,7 @@ func (db *DB) SimilarChunks(query []float32, topK int, embeddingModel string) ([
 	if err != nil {
 		return nil, fmt.Errorf("similar chunks query: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // read-only; rows.Err reports failures
 
 	var result []ScoredChunk
 	for rows.Next() {
@@ -141,7 +141,7 @@ func (db *DB) AdjacentChunks(documentID string, lo, hi int) ([]ChunkRow, error) 
 	if err != nil {
 		return nil, fmt.Errorf("query adjacent chunks: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // read-only; rows.Err reports failures
 
 	var result []ChunkRow
 	for rows.Next() {

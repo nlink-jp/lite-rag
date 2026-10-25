@@ -106,7 +106,6 @@ func (s *Server) handleAsk(w http.ResponseWriter, r *http.Request) {
 
 	// Deduplicate sources by file path, keeping the highest-score passage per file.
 	type seenEntry struct {
-		idx   int
 		entry sourceEntry
 	}
 	seen := make(map[string]seenEntry, len(result.passages))

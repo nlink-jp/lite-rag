@@ -17,14 +17,6 @@ func contents(chunks []chunker.Chunk) []string {
 	return out
 }
 
-func headings(chunks []chunker.Chunk) []string {
-	out := make([]string, len(chunks))
-	for i, c := range chunks {
-		out[i] = c.HeadingPath
-	}
-	return out
-}
-
 // ── Heading splitting ──────────────────────────────────────────────────────
 
 func TestHeadingPath(t *testing.T) {

@@ -15,7 +15,7 @@ func TestNewNonce_Length(t *testing.T) {
 func TestNewNonce_Hex(t *testing.T) {
 	n := NewNonce()
 	for _, c := range n {
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
 			t.Errorf("nonce contains non-hex character: %q", c)
 		}
 	}

@@ -175,10 +175,7 @@ func atomize(text string, maxTokens int) []string {
 			continue
 		}
 		// Paragraph too large: try sentence splitting.
-		sentences := splitSentences(p)
-		for _, s := range sentences {
-			result = append(result, s)
-		}
+		result = append(result, splitSentences(p)...)
 	}
 	return result
 }

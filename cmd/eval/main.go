@@ -111,7 +111,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "open database: %v\n", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "close database: %v\n", err)
+		}
+	}()
 
 	client := llm.New(cfg.API.BaseURL, cfg.API.APIKey, cfg.Models.Embedding, cfg.Models.Chat)
 

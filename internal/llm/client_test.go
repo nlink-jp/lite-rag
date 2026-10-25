@@ -46,7 +46,7 @@ func TestEmbed_Success(t *testing.T) {
 				{"index": 1, "embedding": []float32{0.5, 0.6, 0.7, 0.8}},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -75,7 +75,7 @@ func TestEmbed_OutOfOrderIndex(t *testing.T) {
 				{"index": 0, "embedding": []float32{0.1}},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -96,7 +96,7 @@ func TestEmbed_NegativeIndex(t *testing.T) {
 				{"index": -1, "embedding": []float32{0.1}},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -131,7 +131,7 @@ func TestEmbed_InvalidBaseURL(t *testing.T) {
 
 func TestEmbed_InvalidJSONResponse(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not-json"))
+		_, _ = w.Write([]byte("not-json"))
 	}))
 	defer srv.Close()
 
@@ -151,7 +151,7 @@ func TestEmbed_MissingEmbeddingInResponse(t *testing.T) {
 				// index 1 is absent
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer srv.Close()
 
@@ -177,12 +177,14 @@ data: [DONE]
 		var req struct {
 			Stream bool `json:"stream"`
 		}
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Errorf("decode request: %v", err)
+		}
 		if !req.Stream {
 			t.Error("stream flag not set")
 		}
 		w.Header().Set("Content-Type", "text/event-stream")
-		w.Write([]byte(sse))
+		_, _ = w.Write([]byte(sse))
 	}))
 	defer srv.Close()
 
@@ -206,7 +208,7 @@ data: {"choices":[{"delta":{"content":"ok"},"finish_reason":null}]}
 data: [DONE]
 `
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(sse))
+		_, _ = w.Write([]byte(sse))
 	}))
 	defer srv.Close()
 
@@ -239,7 +241,7 @@ func TestChat_WriteError(t *testing.T) {
 data: [DONE]
 `
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(sse))
+		_, _ = w.Write([]byte(sse))
 	}))
 	defer srv.Close()
 
@@ -322,7 +324,7 @@ data: {"choices":[{"delta":{"content":"fine"},"finish_reason":null}]}
 data: [DONE]
 `
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(sse))
+		_, _ = w.Write([]byte(sse))
 	}))
 	defer srv.Close()
 

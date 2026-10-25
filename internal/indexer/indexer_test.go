@@ -47,7 +47,7 @@ func openDB(t *testing.T) *database.DB {
 	if err != nil {
 		t.Fatalf("Open DB: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
 
@@ -207,7 +207,7 @@ func TestIndexDir_DBErrorIsPerFile(t *testing.T) {
 	writeFile(t, dir, "doc.md", "# Test\n\nContent.")
 
 	db := openDB(t)
-	db.Close() // close before indexing to trigger FindDocumentByPath error
+	_ = db.Close() // close before indexing to trigger FindDocumentByPath error
 
 	emb := &mockEmbedder{dim: 4}
 	idx := indexer.New(db, emb, "test-model", testCfg())
@@ -394,7 +394,7 @@ func TestIndexFile_ReturnsErrorDirectly(t *testing.T) {
 	path := writeFile(t, dir, "doc.md", "# Test\n\nContent.")
 
 	db := openDB(t)
-	db.Close() // force DB error
+	_ = db.Close() // force DB error
 
 	emb := &mockEmbedder{dim: 4}
 	idx := indexer.New(db, emb, "test-model", testCfg())

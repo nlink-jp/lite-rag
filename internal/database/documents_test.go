@@ -17,7 +17,7 @@ func newTestDB(t *testing.T) *database.DB {
 	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
 
@@ -159,7 +159,7 @@ func TestSimilarChunks_SkipsNullEmbedding(t *testing.T) {
 
 func TestReplaceDocument_ClosedDB(t *testing.T) {
 	db := newTestDB(t)
-	db.Close() // close before use
+	_ = db.Close() // close before use
 
 	doc := database.DocumentRow{ID: "d1", FilePath: "/f.md", FileHash: "h", TotalChunks: 0}
 	if err := db.ReplaceDocument(doc, nil); err == nil {
@@ -169,7 +169,7 @@ func TestReplaceDocument_ClosedDB(t *testing.T) {
 
 func TestSimilarChunks_ClosedDB(t *testing.T) {
 	db := newTestDB(t)
-	db.Close()
+	_ = db.Close()
 
 	if _, err := db.SimilarChunks([]float32{1, 0}, 5, ""); err == nil {
 		t.Error("expected error on closed DB, got nil")
@@ -178,7 +178,7 @@ func TestSimilarChunks_ClosedDB(t *testing.T) {
 
 func TestAdjacentChunks_ClosedDB(t *testing.T) {
 	db := newTestDB(t)
-	db.Close()
+	_ = db.Close()
 
 	if _, err := db.AdjacentChunks("d1", 0, 2); err == nil {
 		t.Error("expected error on closed DB, got nil")

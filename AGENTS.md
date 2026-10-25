@@ -48,3 +48,7 @@ pkg/chunker/             ← Public Markdown chunker library
 - **Closing the database**: commands use `defer closeDB(db, &err)` with a named
   `err` return, never a bare `defer db.Close()` — DuckDB checkpoints on Close,
   so a failure there must fail the command.
+- **Lint**: golangci-lint is pinned (`GOLANGCI_VERSION` in the Makefile) and
+  installed into `.go/bin`; bump the pin when a Go update breaks it with
+  "export data version N is greater than maximum supported". `.golangci.yml`
+  keeps one errcheck exclusion (`fmt.Fprint*`).

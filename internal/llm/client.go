@@ -63,7 +63,7 @@ func (c *Client) Embed(ctx context.Context, texts []string) ([][]float32, error)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }() // read side of the response; nothing to report
 
 	var result embedResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -126,7 +126,7 @@ func (c *Client) Chat(ctx context.Context, messages []Message, w io.Writer) erro
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }() // read side of the response; nothing to report
 
 	return parseSSE(resp.Body, w)
 }
@@ -246,7 +246,7 @@ func (c *Client) post(ctx context.Context, path string, body []byte) (*http.Resp
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("llm: %s returned %d: %s", path, resp.StatusCode, string(body))
 	}
 	return resp, nil

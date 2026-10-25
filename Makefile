@@ -13,7 +13,13 @@ GOCACHE    := $(CURDIR)/.go/cache
 export GOPATH GOMODCACHE GOCACHE
 
 # Tools
+# golangci-lint is pinned: a build made with an older golang.org/x/tools
+# cannot read a newer Go's export data and fails on every file. The stamp
+# makes `make lint` reinstall when this version changes, replacing an
+# older binary already in .go/bin.
+GOLANGCI_VERSION := v2.14.0
 GOLANGCI     := $(GOPATH)/bin/golangci-lint
+GOLANGCI_STAMP := $(GOPATH)/bin/.golangci-lint-$(GOLANGCI_VERSION)
 GOVULNCHECK  := $(GOPATH)/bin/govulncheck
 
 # Version from git tag (fallback to "dev")
@@ -68,8 +74,8 @@ vet:
 	go vet ./...
 
 ## lint: run golangci-lint
-lint: $(GOLANGCI)
-	$(GOLANGCI) run ./...
+lint: $(GOLANGCI_STAMP)
+	$(GOLANGCI) run --max-same-issues 0 --max-issues-per-linter 0 ./...
 
 ## vuln: run govulncheck (security scan)
 vuln: $(GOVULNCHECK)
@@ -86,7 +92,7 @@ setup:
 	cp scripts/hooks/pre-push    .git/hooks/pre-push
 	chmod +x .git/hooks/pre-commit .git/hooks/pre-push
 	@echo "Installing golangci-lint..."
-	GOPATH=$(GOPATH) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	GOPATH=$(GOPATH) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)
 	@echo "Installing govulncheck..."
 	GOPATH=$(GOPATH) go install golang.org/x/vuln/cmd/govulncheck@latest
 	@echo "Setup complete."
@@ -279,8 +285,9 @@ help:
 	@grep -E '^## ' Makefile | sed 's/## //'
 
 # Install tools if not present
-$(GOLANGCI):
-	GOPATH=$(GOPATH) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+$(GOLANGCI_STAMP):
+	GOPATH=$(GOPATH) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_VERSION)
+	@touch $@
 
 $(GOVULNCHECK):
 	GOPATH=$(GOPATH) go install golang.org/x/vuln/cmd/govulncheck@latest

@@ -15,7 +15,7 @@ func TestOpen_InMemory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 }
 
 func TestMigrate_TablesExist(t *testing.T) {
@@ -23,7 +23,7 @@ func TestMigrate_TablesExist(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Both tables must be queryable after migration.
 	tables := []string{"documents", "chunks"}
@@ -36,7 +36,7 @@ func TestMigrate_TablesExist(t *testing.T) {
 			t.Errorf("table %q not found after migration: %v", tbl, err)
 			continue
 		}
-		rows.Close()
+		_ = rows.Close()
 	}
 }
 
@@ -49,13 +49,17 @@ func TestMigrate_Idempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Open() error = %v", err)
 	}
-	db1.Close()
+	if err := db1.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
 
 	db2, err := database.Open(path)
 	if err != nil {
 		t.Fatalf("second Open() error = %v", err)
 	}
-	db2.Close()
+	if err := db2.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
 }
 
 func TestOpen_DirectoryPathFails(t *testing.T) {
@@ -106,7 +110,7 @@ func TestOpen_FilePersistsAcrossReopen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	hits, err := db.SimilarChunks([]float32{0.6, 0.8}, 1, "m")
 	if err != nil {
 		t.Fatalf("SimilarChunks: %v", err)

@@ -1,0 +1,15 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Writes with fmt.Fprint* go to the CLI's own stdout/stderr, an HTTP
+      # stream the client may already have closed, or a strings.Builder.
+      # There is nothing to do with the error: reporting a failed write to
+      # the stream that just failed is circular. This is the only errcheck
+      # exclusion (same policy as otx-lookup's .golangci.yml); an unchecked
+      # Close or Write anywhere else is handled or discarded explicitly.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln

@@ -17,6 +17,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   the change never reached the file — and the command still exited 0. The close
   error is now returned (joined with any earlier error).
 
+### Internal
+
+- **`make lint` works again on Go 1.27.** It installed golangci-lint v1 from the
+  v1 module path, whose `golang.org/x/tools` cannot read Go 1.27 export data, so
+  `make check` stopped on the first file. The Makefile now pins golangci-lint
+  v2.14.0 (a version stamp reinstalls it when the pin changes), lists every
+  finding (`--max-same-issues 0`), and `.golangci.yml` keeps the organization's
+  single errcheck exclusion (`fmt.Fprint*`). The 44 findings it surfaced are
+  fixed: read-side `Close` calls are discarded explicitly, tests check or
+  discard theirs, and two staticcheck and two unused-code findings are gone.
+
 ## [0.4.0] - 2026-10-26
 
 ### Changed

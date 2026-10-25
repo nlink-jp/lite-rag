@@ -25,7 +25,7 @@ OpenAI 互換 API（例：[LM Studio](https://lmstudio.ai/)）経由でローカ
 |---|---|---|
 | Go | 1.26+ | ビルドツールチェーン |
 | make | 任意 | ビルド自動化 |
-| cc（clang/gcc） | 任意 | CGo コンパイル（go-duckdb 必須） |
+| cc（clang/gcc） | 任意 | CGo コンパイル（DuckDB ドライバーに必須） |
 | LM Studio | 任意 | ローカル LLM 推論サーバー |
 
 詳細なセットアップ手順は [docs/ja/setup.ja.md](docs/ja/setup.ja.md) を参照してください。

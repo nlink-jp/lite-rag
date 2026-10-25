@@ -6,9 +6,10 @@ RULES.md §18 の要件に従い、すべてのサードパーティ依存関係
 
 ## 直接依存
 
-### `github.com/marcboeker/go-duckdb/v2` @ v2.4.3
+### `github.com/duckdb/duckdb-go/v2` @ v2.20000.0
 
-- **目的:** DuckDB 向け CGo ベースの Go ドライバー（v2）。`database/sql` 互換性を提供し、
+- **目的:** DuckDB チームが保守する、DuckDB 向け CGo ベースの Go ドライバー。
+  v2.20000.0 は DuckDB v2.0.0 LTS を同梱。`database/sql` 互換性を提供し、
   `[]float32` を `FLOAT[]` カラムに SQL パラメーターとして直接渡せるため、
   `list_cosine_similarity()` による DB 側でのコサイン類似度計算が可能。
 - **内製しない理由:** DuckDB ワイヤープロトコルドライバーをゼロから実装するのは現実的でない。
@@ -17,6 +18,9 @@ RULES.md §18 の要件に従い、すべてのサードパーティ依存関係
   パラメーターとして渡せず、埋め込みベクトルを `BLOB` として保存して Go 側でコサイン類似度を
   計算する必要があった。v2 ではこの制限が解消され、`list_cosine_similarity` による
   DuckDB 内での類似度検索が可能になった。
+- **このモジュールパスを使う理由:** ドライバーは `github.com/marcboeker/go-duckdb/v2`
+  からここへ移った。旧パスの最終リリースは 2025-10 の v2.4.3（DuckDB v1.4.1）で、
+  DuckDB の修正はもう届かない。
 - **ライセンス:** MIT
 - **コンプライアンス:** 社内・商用利用ともに制限なし。
 

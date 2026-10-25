@@ -9,6 +9,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **DuckDB driver moved to `github.com/duckdb/duckdb-go/v2` v2.20000.0, which
+  bundles DuckDB v2.0.0 LTS** (was `github.com/marcboeker/go-duckdb/v2` v2.4.3
+  with DuckDB v1.4.1). The old module path's last release came in 2025-10, so
+  lite-rag could not take a DuckDB fix. Indexing and search behave as before.
+- **An index created by this release does not open in older versions.** DuckDB
+  2.0 writes a storage format DuckDB 1.x cannot read. Indexes created earlier
+  keep working here and stay readable by v0.3.x after this release has updated
+  them; a new index file does not open in v0.3.x.
+
+### Security
+
+- **CVE-2026-111497 (Brotli decoder out-of-bounds write) is not fixed yet.**
+  DuckDB's parquet extension vendors Brotli 1.1.0, and every DuckDB release so
+  far — v2.0.0 included — still does; the upstream fix (duckdb/duckdb#27791) was
+  unmerged on 2026-10-25. lite-rag never reads Parquet, so the decoder is linked
+  but not reached. This release moves lite-rag onto the maintained driver line
+  so the fix lands as a dependency bump once DuckDB ships it.
+
 ### Fixed
 
 - **`make verify-release` now fails closed.** Its last block chained unzip, the

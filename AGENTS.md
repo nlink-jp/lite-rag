@@ -35,6 +35,12 @@ pkg/chunker/             ← Public Markdown chunker library
 ## Gotchas
 
 - **CGO required**: DuckDB uses CGO (`CGO_ENABLED=1`). Pure-Go builds (`CGO_ENABLED=0`) will fail.
+- **Driver**: `github.com/duckdb/duckdb-go/v2` (`marcboeker/go-duckdb/v2` is
+  frozen). Its version encodes DuckDB's: v2.20000.x = DuckDB v2.0.x. The
+  native libraries come from `go.duckdb.org/libduckdb/*` via the module proxy.
+- **Index files**: a database created by DuckDB 2.0 cannot be opened by DuckDB
+  1.x (lite-rag ≤ v0.3.x). Indexes created earlier still open here and stay
+  readable by older versions.
 - **Cross-compilation**: Linux binaries must be built inside a container (podman/docker) due to CGO. Use `make cross-build-linux`, not `make build-all`.
 - **Module path**: bare `lite-rag` (no GitHub path) in `go.mod`. Internal imports use `lite-rag/internal/...`.
 - **Config format**: sectioned TOML (`[api]`, `[models]`, `[database]`, `[retrieval]`, `[server]`). See `config.example.toml`.

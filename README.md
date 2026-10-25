@@ -33,7 +33,7 @@ mixed-script token estimation.
 |---|---|---|
 | Go | 1.26+ | Build toolchain |
 | make | any | Build automation |
-| cc (clang/gcc) | any | CGo (required by go-duckdb) |
+| cc (clang/gcc) | any | CGo (required by the DuckDB driver) |
 | LM Studio | any | Local LLM inference server |
 
 See [docs/en/setup.md](docs/en/setup.md) for full setup instructions.

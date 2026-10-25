@@ -1,7 +1,10 @@
 package database_test
 
 import (
+	"math"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"lite-rag/internal/database"
 )
@@ -71,5 +74,47 @@ func TestClose_Idempotent(t *testing.T) {
 	}
 	if err := db.Close(); err != nil {
 		t.Fatalf("first Close() error = %v", err)
+	}
+}
+
+// TestOpen_FilePersistsAcrossReopen indexes into an on-disk database, closes
+// it, and searches it again after reopening — the path every real index takes.
+// It pins the storage round trip through whatever DuckDB the driver bundles.
+func TestOpen_FilePersistsAcrossReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "index.duckdb")
+
+	db, err := database.Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	doc := database.DocumentRow{
+		ID: "d1", FilePath: "/f.md", FileHash: "h", TotalChunks: 1,
+		IndexedAt: time.Now().UTC(), EmbeddingModel: "m",
+	}
+	chunks := []database.ChunkRow{
+		{ID: "c0", DocumentID: "d1", ChunkIndex: 0, Content: "persisted",
+			Embedding: []float32{0.6, 0.8}},
+	}
+	if err := db.ReplaceDocument(doc, chunks); err != nil {
+		t.Fatalf("ReplaceDocument: %v", err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	db, err = database.Open(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer db.Close()
+	hits, err := db.SimilarChunks([]float32{0.6, 0.8}, 1, "m")
+	if err != nil {
+		t.Fatalf("SimilarChunks: %v", err)
+	}
+	if len(hits) != 1 || hits[0].Content != "persisted" {
+		t.Fatalf("hits = %+v, want the persisted chunk", hits)
+	}
+	if math.Abs(float64(hits[0].Score-1.0)) > 1e-5 {
+		t.Errorf("score = %v, want ~1.0", hits[0].Score)
 	}
 }

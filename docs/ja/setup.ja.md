@@ -6,7 +6,7 @@
 |---|---|---|
 | Go | 1.26+ | ビルドツールチェーン |
 | make | 任意 | ビルド自動化 |
-| cc（clang/gcc） | 任意 | CGo コンパイル（go-duckdb 必須） |
+| cc（clang/gcc） | 任意 | CGo コンパイル（DuckDB ドライバーに必須） |
 | podman または docker | 任意 | Linux クロスコンパイル（任意） |
 
 > **注意:** ビルドはプロジェクトローカルの Go モジュールキャッシュ（`.go/`）を使用するため、
@@ -86,7 +86,7 @@ make cross-build-darwin
 
 ### linux ターゲット（コンテナ経由）
 
-`go-duckdb` は GCC/libstdc++ でビルドされた DuckDB 静的ライブラリをリンクします。
+DuckDB ドライバー（`duckdb-go`）は GCC/libstdc++ でビルドされた DuckDB 静的ライブラリをリンクします。
 macOS から Linux 向けにクロスコンパイルするには、マッチする C++ ランタイムを持つ
 Linux 環境が必要です。コンテナを使った方法が最も簡単です：
 

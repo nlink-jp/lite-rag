@@ -6,7 +6,7 @@
 |---|---|---|
 | Go | 1.26+ | Build toolchain |
 | make | any | Build automation |
-| cc (clang/gcc) | any | CGo compilation (required by go-duckdb) |
+| cc (clang/gcc) | any | CGo compilation (required by the DuckDB driver) |
 | podman or docker | any | Linux cross-compilation (optional) |
 
 > **Note:** The build uses a project-local Go module cache (`.go/`) to avoid
@@ -98,7 +98,7 @@ make cross-build-darwin
 
 ### linux targets (via container)
 
-`go-duckdb` links a prebuilt static DuckDB library built with GCC/libstdc++.
+The DuckDB driver (`duckdb-go`) links a prebuilt static DuckDB library built with GCC/libstdc++.
 Cross-compiling this from macOS requires a Linux environment with the matching
 C++ runtime. The easiest approach is to run the build inside a container:
 

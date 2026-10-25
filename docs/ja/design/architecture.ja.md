@@ -251,7 +251,7 @@ CREATE TABLE chunks (
     chunk_index  INTEGER NOT NULL,     -- ドキュメント内の 0 始まり位置
     heading_path TEXT,                 -- 例: "# ガイド > ## インストール"
     content      TEXT    NOT NULL,     -- 正規化済みテキスト（プレフィックスなし）
-    embedding    FLOAT[]               -- []float32; go-duckdb v2 でネイティブ保存
+    embedding    FLOAT[]               -- []float32; DuckDB ドライバーでネイティブ保存
 );
 ```
 
@@ -327,7 +327,7 @@ lite-rag reindex
 
 | パッケージ | 目的 | 採用理由 |
 |---|---|---|
-| `github.com/marcboeker/go-duckdb/v2` | DuckDB ドライバー | 公式 Go ドライバー; 組み込み DB で外部サーバー不要; v2 で `[]float32` SQL パラメーター対応 |
+| `github.com/duckdb/duckdb-go/v2` | DuckDB ドライバー | 公式 Go ドライバー; 組み込み DB で外部サーバー不要; v2 で `[]float32` SQL パラメーター対応 |
 | `github.com/spf13/cobra` | CLI フレームワーク | Go CLI の標準; 構造化サブコマンドサポート |
 | `github.com/BurntSushi/toml` | TOML 設定解析 | 軽量・推移的依存なし・広く使用されている |
 | `golang.org/x/text` | Unicode 正規化 (NFKC) | 標準ライブラリ拡張; 信頼できる日本語テキスト処理に必須 |

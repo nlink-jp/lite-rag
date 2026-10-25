@@ -300,7 +300,7 @@ CREATE TABLE chunks (
     chunk_index  INTEGER NOT NULL,     -- 0-based position within the document
     heading_path TEXT,                 -- e.g. "# Guide > ## Installation"
     content      TEXT    NOT NULL,     -- normalized text (prefix-free)
-    embedding    FLOAT[]               -- []float32; stored natively via go-duckdb v2
+    embedding    FLOAT[]               -- []float32; stored natively via the DuckDB driver
 );
 ```
 
@@ -388,7 +388,7 @@ Cross-compilation strategy:
 
 | Package | Purpose | Rationale |
 |---|---|---|
-| `github.com/marcboeker/go-duckdb` | DuckDB driver | Official Go driver; embedded DB avoids an external server |
+| `github.com/duckdb/duckdb-go/v2` | DuckDB driver | Official Go driver; embedded DB avoids an external server |
 | `github.com/spf13/cobra` | CLI framework | Standard Go CLI library; structured subcommand support |
 | `github.com/BurntSushi/toml` | TOML config parsing | Minimal, widely used, no transitive deps |
 | `golang.org/x/text` | Unicode normalization (NFKC) | Standard library extension; required for reliable Japanese text handling |

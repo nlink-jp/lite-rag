@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/marcboeker/go-duckdb/v2"
+	_ "github.com/duckdb/duckdb-go/v2"
 )
 
 // DB wraps a DuckDB connection.
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     chunk_index  INTEGER  NOT NULL,
     heading_path TEXT,
     content      TEXT     NOT NULL,
-    embedding    FLOAT[]            -- []float32 stored as DuckDB list; requires go-duckdb v2
+    embedding    FLOAT[]            -- []float32 stored as DuckDB list
 );
 `
 	if _, err := db.conn.Exec(ddl); err != nil {

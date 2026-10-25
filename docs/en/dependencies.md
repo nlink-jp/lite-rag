@@ -6,9 +6,10 @@ All third-party dependencies are listed here as required by RULES.md §18.
 
 ## Direct Dependencies
 
-### `github.com/marcboeker/go-duckdb/v2` @ v2.4.3
+### `github.com/duckdb/duckdb-go/v2` @ v2.20000.0
 
-- **Purpose:** CGo-based Go driver for DuckDB v2. Provides `database/sql`
+- **Purpose:** CGo-based Go driver for DuckDB, maintained by the DuckDB team.
+  v2.20000.0 bundles DuckDB v2.0.0 LTS. Provides `database/sql`
   compatibility and supports passing `[]float32` directly as SQL parameters to
   `FLOAT[]` columns, enabling DB-side cosine similarity via `list_cosine_similarity()`.
 - **Why not in-house:** Implementing a DuckDB wire protocol driver from scratch would
@@ -18,6 +19,9 @@ All third-party dependencies are listed here as required by RULES.md §18.
   `FLOAT[]` column; embeddings had to be stored as `BLOB` and similarity computed in Go.
   v2 resolves this, allowing the similarity search to run entirely inside DuckDB using
   `list_cosine_similarity`, which is both simpler and more efficient.
+- **Why this module path:** the driver moved here from
+  `github.com/marcboeker/go-duckdb/v2`, whose last release (v2.4.3, DuckDB
+  v1.4.1) came in 2025-10; that path no longer receives DuckDB fixes.
 - **License:** MIT
 - **Compliance:** No restrictions for internal or commercial use.
 

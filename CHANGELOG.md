@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [Unreleased]
+## [0.4.1] - 2026-10-26
 
 ### Fixed
 
@@ -324,6 +324,7 @@ identical to v0.2.6.
 
 Windows is not supported due to CGo constraints from `go-duckdb`.
 
+[0.4.1]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.4.1
 [0.4.0]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.4.0
 [0.3.1]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.3.1
 [0.3.0]: https://github.com/nlink-jp/lite-rag/releases/tag/v0.3.0

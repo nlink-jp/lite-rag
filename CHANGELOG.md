@@ -28,6 +28,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   unmerged on 2026-10-25. lite-rag never reads Parquet, so the decoder is linked
   but not reached. This release moves lite-rag onto the maintained driver line
   so the fix lands as a dependency bump once DuckDB ships it.
+- **`golang.org/x/text` updated to v0.42.0 (GO-2026-5970).** Unicode
+  normalization looped forever on certain invalid input, and lite-rag
+  normalizes every document it indexes, so a crafted document could hang
+  `lite-rag index`. `govulncheck` now reports no vulnerabilities.
 
 ### Fixed
 

@@ -45,3 +45,6 @@ pkg/chunker/             ← Public Markdown chunker library
 - **Module path**: bare `lite-rag` (no GitHub path) in `go.mod`. Internal imports use `lite-rag/internal/...`.
 - **Config format**: sectioned TOML (`[api]`, `[models]`, `[database]`, `[retrieval]`, `[server]`). See `config.example.toml`.
 - **No hosted CI**: quality gate runs locally via Git hooks. Run `make setup` once after cloning.
+- **Closing the database**: commands use `defer closeDB(db, &err)` with a named
+  `err` return, never a bare `defer db.Close()` — DuckDB checkpoints on Close,
+  so a failure there must fail the command.

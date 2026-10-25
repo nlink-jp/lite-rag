@@ -7,6 +7,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **A failed database close is reported instead of ignored.** Every command
+  closed the DuckDB index with a bare `defer db.Close()`. DuckDB checkpoints on
+  close, so after `index`, `reindex` or `docs delete` a failure there can mean
+  the change never reached the file — and the command still exited 0. The close
+  error is now returned (joined with any earlier error).
+
 ## [0.4.0] - 2026-10-26
 
 ### Changed

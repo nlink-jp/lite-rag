@@ -28,7 +28,7 @@ func init() {
 	rootCmd.AddCommand(reindexCmd)
 }
 
-func runReindex(cmd *cobra.Command, _ []string) error {
+func runReindex(cmd *cobra.Command, _ []string) (err error) {
 	cfg, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
@@ -38,7 +38,7 @@ func runReindex(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
-	defer db.Close()
+	defer closeDB(db, &err)
 
 	// Check how many stale documents exist before starting.
 	stale, err := db.ListStaleDocuments(cfg.Models.Embedding)

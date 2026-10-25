@@ -36,7 +36,7 @@ func init() {
 	rootCmd.AddCommand(indexCmd)
 }
 
-func runIndex(cmd *cobra.Command, _ []string) error {
+func runIndex(cmd *cobra.Command, _ []string) (err error) {
 	if indexDir == "" && indexFile == "" {
 		return fmt.Errorf("one of --dir or --file is required")
 	}
@@ -53,7 +53,7 @@ func runIndex(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
-	defer db.Close()
+	defer closeDB(db, &err)
 
 	client := llm.New(cfg.API.BaseURL, cfg.API.APIKey, cfg.Models.Embedding, cfg.Models.Chat)
 	idx := indexer.New(db, client, cfg.Models.Embedding, cfg.Retrieval)

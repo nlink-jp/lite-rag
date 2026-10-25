@@ -53,12 +53,12 @@ func openDB() (*database.DB, error) {
 	return database.Open(cfg.Database.Path)
 }
 
-func runDocsList(_ *cobra.Command, _ []string) error {
+func runDocsList(_ *cobra.Command, _ []string) (err error) {
 	db, err := openDB()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer closeDB(db, &err)
 
 	docs, err := db.ListDocuments()
 	if err != nil {
@@ -99,13 +99,13 @@ func runDocsList(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func runDocsDelete(_ *cobra.Command, args []string) error {
+func runDocsDelete(_ *cobra.Command, args []string) (err error) {
 	id := args[0]
 	db, err := openDB()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer closeDB(db, &err)
 
 	if err := db.DeleteDocument(id); err != nil {
 		return err
@@ -114,13 +114,13 @@ func runDocsDelete(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func runDocsShow(_ *cobra.Command, args []string) error {
+func runDocsShow(_ *cobra.Command, args []string) (err error) {
 	id := args[0]
 	db, err := openDB()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer closeDB(db, &err)
 
 	chunks, err := db.DocumentChunks(id)
 	if err != nil {

@@ -372,7 +372,7 @@ lite-rag reindex
 | linux   | arm64 | Yes       |
 | darwin  | amd64 | Yes       |
 | darwin  | arm64 | Yes       |
-| windows | amd64 | **No** — dropped due to CGo constraints from `go-duckdb` |
+| windows | amd64 | **No** — dropped due to CGo constraints from the DuckDB driver |
 
 Cross-compilation strategy:
 

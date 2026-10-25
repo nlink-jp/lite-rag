@@ -317,7 +317,7 @@ lite-rag reindex
 | linux   | arm64   | ○ |
 | darwin  | amd64   | ○ |
 | darwin  | arm64   | ○ |
-| windows | amd64   | **なし** — `go-duckdb` の CGo 制約によりドロップ |
+| windows | amd64   | **なし** — DuckDB ドライバーの CGo 制約によりドロップ |
 
 クロスコンパイルの詳細は `docs/ja/setup.ja.md` を参照。
 

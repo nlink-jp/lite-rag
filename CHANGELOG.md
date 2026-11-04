@@ -7,6 +7,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.0] - 2026-11-04
+
+### Changed
+
+- **An unknown key in `config.toml` is now an error** that names the key,
+  where it used to be skipped without a word. A typo such as
+  `[retrieval] query_rewirte` no longer leaves a setting that seems to do
+  nothing. Remove or correct the key the message names.
+- **The config file is read by nlink-jp/toml** (v0.1.1) instead of the
+  third-party `BurntSushi/toml`, so the tool carries no TOML code from
+  outside the organization.
+
 ## [0.4.1] - 2026-10-26
 
 ### Fixed

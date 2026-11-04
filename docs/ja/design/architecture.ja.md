@@ -329,7 +329,7 @@ lite-rag reindex
 |---|---|---|
 | `github.com/duckdb/duckdb-go/v2` | DuckDB ドライバー | 公式 Go ドライバー; 組み込み DB で外部サーバー不要; v2 で `[]float32` SQL パラメーター対応 |
 | `github.com/spf13/cobra` | CLI フレームワーク | Go CLI の標準; 構造化サブコマンドサポート |
-| `github.com/BurntSushi/toml` | TOML 設定解析 | 軽量・推移的依存なし・広く使用されている |
+| `github.com/nlink-jp/toml` | TOML 設定解析（厳格: 知らないキーはエラー） | 組織自前; 標準ライブラリのみ・推移的依存なし |
 | `golang.org/x/text` | Unicode 正規化 (NFKC) | 標準ライブラリ拡張; 信頼できる日本語テキスト処理に必須 |
 
 ---

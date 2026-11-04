@@ -3,6 +3,7 @@ package config_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"lite-rag/internal/config"
@@ -97,6 +98,21 @@ func TestInvalidTOML(t *testing.T) {
 	}
 	if _, err := config.Load(path); err == nil {
 		t.Error("Load() expected error for invalid TOML, got nil")
+	}
+}
+
+// A key the config does not know — a typo, or a setting from another tool —
+// is refused with its name rather than silently ignored, so a setting that
+// seems to do nothing cannot be one that was never read.
+func TestLoadRefusesUnknownKeys(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	body := "[retrieval]\ntop_k = 5\nquery_rewirte = true\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := config.Load(path)
+	if err == nil || !strings.Contains(err.Error(), "retrieval.query_rewirte") {
+		t.Fatalf("Load = %v, want an error naming retrieval.query_rewirte", err)
 	}
 }
 

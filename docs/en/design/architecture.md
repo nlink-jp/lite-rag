@@ -390,7 +390,7 @@ Cross-compilation strategy:
 |---|---|---|
 | `github.com/duckdb/duckdb-go/v2` | DuckDB driver | Official Go driver; embedded DB avoids an external server |
 | `github.com/spf13/cobra` | CLI framework | Standard Go CLI library; structured subcommand support |
-| `github.com/BurntSushi/toml` | TOML config parsing | Minimal, widely used, no transitive deps |
+| `github.com/nlink-jp/toml` | TOML config parsing (strict: an unknown key is an error) | The organization's own; standard library only, no transitive deps |
 | `golang.org/x/text` | Unicode normalization (NFKC) | Standard library extension; required for reliable Japanese text handling |
 
 All dependencies are documented in `docs/en/dependencies.md` (Rule 18).

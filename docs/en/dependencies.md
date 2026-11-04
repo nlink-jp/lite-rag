@@ -34,11 +34,12 @@ All third-party dependencies are listed here as required by RULES.md §18.
 - **License:** Apache 2.0
 - **Compliance:** No restrictions for internal or commercial use.
 
-### `github.com/BurntSushi/toml` @ v1.6.0
+### `github.com/nlink-jp/toml` @ v0.1.1
 
-- **Purpose:** TOML configuration file parsing.
-- **Why not in-house:** TOML parsing is non-trivial. This library is minimal (no
-  transitive dependencies), widely used, and actively maintained.
+- **Purpose:** TOML configuration file parsing (strict: an unknown key is an error).
+- **Why this library:** The organization's own TOML decoder, built on the standard
+  library only (no transitive dependencies), so the tool carries no TOML code from
+  outside the organization.
 - **License:** MIT
 - **Compliance:** No restrictions.
 

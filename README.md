@@ -100,6 +100,9 @@ addr      = "127.0.0.1:8080"  # listen address for `serve`
 log_level = "info"             # info | debug | warn | error
 ```
 
+A key the file does not know — a typo, say — is an error that names it, not a
+setting silently ignored.
+
 Environment variables override file settings:
 
 | Variable | Overrides |

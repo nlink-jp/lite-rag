@@ -7,7 +7,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [Unreleased]
+## [0.5.1] - 2026-11-14
+
+### Security
+
+- **Rebuilt with Go 1.27.4, which `go.mod` now requires** (it was `go 1.26.1`),
+  and the image the Linux binaries are built in is `golang:1.27.4`, pinned by
+  digest (it was the moving tag `golang:1.26`). No code of the tool changed.
+  v0.5.0 came out of two toolchains: the darwin-arm64 binary was built with
+  Go 1.27.3, the two Linux binaries with Go 1.26.10 — whatever the tag pointed
+  at that day. `govulncheck -mode binary` finds one standard-library advisory
+  in each of the three published binaries: GO-2026-6859 in `net/http`, fixed
+  in Go 1.26.11 and 1.27.4. Binary mode shows that the affected function
+  (`http.MaxBytesReader`) is linked into the binary, not that the tool calls
+  it, and lite-rag's own code does not call it. The advisory is described at
+  `https://pkg.go.dev/vuln/GO-2026-6859`.
 
 ### Changed
 

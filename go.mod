@@ -1,6 +1,6 @@
 module lite-rag
 
-go 1.26.1
+go 1.27.4
 
 require (
 	github.com/duckdb/duckdb-go/v2 v2.20000.0

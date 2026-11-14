@@ -13,7 +13,8 @@ Part of [lite-series](https://github.com/nlink-jp/lite-series).
 ```sh
 make build        # dist/lite-rag
 make check        # vet → lint → test → build → govulncheck (full gate)
-make vuln         # govulncheck alone; `make dist-darwin` / `make dist-linux` run it first and stop on a finding
+make vuln         # govulncheck over the darwin build; `make dist-darwin` / `make dist-linux` run it first and stop on a finding.
+                  # The Linux builds are scanned in the build container, right before each is built
 go test ./...     # tests only
 make test-linux   # same suite on Linux (container)
 make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)

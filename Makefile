@@ -45,6 +45,15 @@ CONTAINER  := $(shell command -v podman 2>/dev/null || command -v docker 2>/dev/
 # (the multi-arch index). Move it together with go.mod.
 GO_IMAGE   := golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d
 
+# govulncheck for the scan that runs inside the build container. Named by
+# version: `go install` checks the module against the checksum database, so one
+# version is one body of code. It is installed outside GOPATH/bin: here that is
+# .go/bin in the repository, which the container shares with the host, and the
+# govulncheck already there is the host's — a macOS binary. The version is part
+# of the path, so moving the version installs it again.
+GOVULNCHECK_VERSION := v1.7.0
+VULN_GOBIN := /tmp/govulncheck-$(GOVULNCHECK_VERSION)
+
 # Distribution output directory
 DIST_DIR   := dist
 
@@ -55,6 +64,7 @@ EVAL_LINK  := testdata/db/eval-current.db
 
 .PHONY: all build test lint vet vuln check setup \
         cross-build cross-build-darwin cross-build-linux cross-build-linux-native \
+        vuln-linux-native \
         dist dist-darwin dist-linux verify-release \
         eval-build-db eval \
         clean help
@@ -80,11 +90,13 @@ vet:
 lint: $(GOLANGCI_STAMP)
 	$(GOLANGCI) run --max-same-issues 0 --max-issues-per-linter 0 ./...
 
-## vuln: known vulnerabilities in the modules and the standard library this
-## build uses (govulncheck). `check` runs it, and `dist-darwin` and `dist-linux`
-## depend on it, so a release archive cannot be built past a finding. It needs
-## the network, and its database changes under an unchanged tree: a finding can
-## appear without a commit.
+## vuln: known vulnerabilities in the modules and the standard library the
+## darwin build uses (govulncheck). `check` runs it, and `dist-darwin` and
+## `dist-linux` depend on it, so a release archive cannot be built past a
+## finding. The Linux builds are cgo builds made in a container, which the host
+## cannot load: cross-build-linux scans each of them there, right before
+## building it, and stops the same way. It needs the network, and its database
+## changes under an unchanged tree: a finding can appear without a commit.
 vuln: $(GOVULNCHECK)
 	$(GOVULNCHECK) ./...
 
@@ -138,7 +150,35 @@ cross-build-linux:
 		-e GOMODCACHE=/workspace/.go/pkg/mod \
 		-e GOCACHE=/workspace/.go/cache \
 		$(GO_IMAGE) \
-		bash -c "apt-get update -qq && apt-get install -y -q gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-x86-64-linux-gnu g++-x86-64-linux-gnu && make cross-build-linux-native"
+		bash -c "apt-get update -qq && apt-get install -y -q gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-x86-64-linux-gnu g++-x86-64-linux-gnu && make vuln-linux-native cross-build-linux-native"
+
+$(VULN_GOBIN)/govulncheck:
+	GOBIN=$(VULN_GOBIN) go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+
+## vuln-linux-native: govulncheck over each Linux build, with the environment
+## cross-build-linux-native builds it with (Linux host or the build container).
+## cross-build-linux runs it in the container right before the build: a cgo
+## build for another OS cannot be loaded on the macOS host, so `vuln` cannot
+## see it.
+vuln-linux-native: $(VULN_GOBIN)/govulncheck
+	@echo "govulncheck linux/amd64"
+	@if [ "$$(uname -m)" = "aarch64" ]; then \
+		GOOS=linux GOARCH=amd64 CGO_ENABLED=1 \
+			CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \
+			$(VULN_GOBIN)/govulncheck ./...; \
+	else \
+		GOOS=linux GOARCH=amd64 CGO_ENABLED=1 \
+			$(VULN_GOBIN)/govulncheck ./...; \
+	fi
+	@echo "govulncheck linux/arm64"
+	@if [ "$$(uname -m)" = "x86_64" ]; then \
+		GOOS=linux GOARCH=arm64 CGO_ENABLED=1 \
+			CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ \
+			$(VULN_GOBIN)/govulncheck ./...; \
+	else \
+		GOOS=linux GOARCH=arm64 CGO_ENABLED=1 \
+			$(VULN_GOBIN)/govulncheck ./...; \
+	fi
 
 ## cross-build-linux-native: compile linux/amd64 and linux/arm64 (Linux host only)
 ## Detects the host architecture at runtime to select the correct cross-compiler:

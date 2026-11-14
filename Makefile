@@ -77,7 +77,11 @@ vet:
 lint: $(GOLANGCI_STAMP)
 	$(GOLANGCI) run --max-same-issues 0 --max-issues-per-linter 0 ./...
 
-## vuln: run govulncheck (security scan)
+## vuln: known vulnerabilities in the modules and the standard library this
+## build uses (govulncheck). `check` runs it, and `dist-darwin` and `dist-linux`
+## depend on it, so a release archive cannot be built past a finding. It needs
+## the network, and its database changes under an unchanged tree: a finding can
+## appear without a commit.
 vuln: $(GOVULNCHECK)
 	$(GOVULNCHECK) ./...
 
@@ -177,7 +181,7 @@ dist: dist-darwin dist-linux
 # darwin ships arm64 only as a .zip, per the org Release Archive Standard.
 # The .zip is the shipped artifact and notarytool accepts it directly, so
 # there is no temp-zip indirection any more.
-dist-darwin: cross-build-darwin
+dist-darwin: vuln cross-build-darwin
 	@mkdir -p $(DIST_DIR)
 	@echo "Packaging darwin/arm64..."
 	@rm -rf $(DIST_DIR)/_pkg && mkdir -p $(DIST_DIR)/_pkg
@@ -236,7 +240,7 @@ verify-release:
 	@echo "verify-release: OK ($(VERSION), notarized, unpacks, runs, reports its version, clean linux archives)"
 
 ## dist-linux: package linux/amd64 and linux/arm64 archives (requires container or Linux host)
-dist-linux: cross-build-linux
+dist-linux: vuln cross-build-linux
 	@mkdir -p $(DIST_DIR)
 	@for arch in amd64 arm64; do \
 		echo "Packaging linux/$$arch..."; \

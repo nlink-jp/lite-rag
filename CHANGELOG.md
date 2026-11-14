@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- `make dist`, `make dist-darwin` and `make dist-linux` run `make vuln`
+  (govulncheck) first and stop on a finding, so a release archive cannot be
+  built past one. Until now only `make check` ran it.
+
 ## [0.5.0] - 2026-11-04
 
 ### Changed

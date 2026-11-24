@@ -7,7 +7,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-## [Unreleased]
+## [0.5.2] - 2026-11-24
+
+### Security
+
+- **CVE-2026-111497 is fixed** (the out-of-bounds write in the Brotli decoder
+  that DuckDB's parquet extension bundles). The DuckDB driver moves from
+  `github.com/duckdb/duckdb-go/v2` v2.20000.0 to v2.20001.0, which bundles
+  DuckDB v2.0.1; that release carries the upstream decoder fix
+  (duckdb/duckdb#27791). Brotli still reports version 1.1.0, because the fix
+  was ported into the bundled decoder rather than taken as a new Brotli
+  release. lite-rag never reads Parquet, so the decoder was linked but not
+  reached.
 
 ### Changed
 
